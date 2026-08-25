@@ -31,7 +31,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { font-family: var(--font); background: transparent; color: var(--text); }
+  html, body { font-family: var(--font); background: transparent; color: var(--text); overflow: hidden; }
   body { padding: 16px; }
 
   /* ── Poll card ─────────────────────────────────────────────────
@@ -643,7 +643,7 @@ var POLL       = null;
   })();
 
   function sendHeight() {
-    var currentHeight = document.body.scrollHeight;
+    var currentHeight = document.documentElement.offsetHeight;
     // Only send if height has genuinely changed
     if (currentHeight === lastHeight) {
       stableCount++;
@@ -661,18 +661,19 @@ var POLL       = null;
     }, '*');
   }
 
-  // Initial burst: wait for content to paint before first message,
-  // then send a small number of follow-ups to catch late layout shifts.
-  // Fewer, slower retries = less visible jumping on load.
-  setTimeout(function() {
+  // Send an immediate estimate so the iframe never sits at 1px.
+  // This fires before the JSON fetch completes, so the parent gets
+  // a sensible height right away and avoids the 1px -> full jump.
+  sendHeight();
+
+  // Follow-up burst after content renders — catches the real height
+  // once the poll question and options are in the DOM.
+  var retryCount    = 0;
+  var retryInterval = setInterval(function() {
     sendHeight();
-    var retryCount    = 0;
-    var retryInterval = setInterval(function() {
-      sendHeight();
-      retryCount++;
-      if (retryCount >= 4) clearInterval(retryInterval);
-    }, 500);
-  }, 100);
+    retryCount++;
+    if (retryCount >= 5) clearInterval(retryInterval);
+  }, 400);
 
   // Re-fire on genuine content height changes (e.g. vote → results transition)
   // Debounced to avoid flooding the parent with messages during animations.
