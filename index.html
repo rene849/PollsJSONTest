@@ -35,7 +35,7 @@
   body { padding: 16px; }
 
   /* ── Poll card ─────────────────────────────────────────────────
-     Outer wrapper. min-height prevents the card collapsing while
+     Outer wrapper. Height grows naturally with content — no fixed min-height.
      the skeleton loads. Keep in sync with iframe height guide above.
      ──────────────────────────────────────────────────────────── */
   .poll {
@@ -47,7 +47,7 @@
     background: var(--bg);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     padding: 24px;
-    min-height: 360px;
+    /* min-height removed — card now grows naturally with content */
     display: flex;
     flex-direction: column;
   }
