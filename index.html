@@ -31,7 +31,7 @@
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { font-family: var(--font); background: transparent; color: var(--text); overflow: hidden; }
+  html, body { font-family: var(--font); background: transparent; color: var(--text); overflow-x: hidden; }
   body { padding: 16px; }
 
   /* ── Poll card ─────────────────────────────────────────────────
@@ -360,7 +360,12 @@ var POLL       = null;
     return;
   }
 
-  // ── Step 2: fetch polls.json and look up this course + poll ──────
+  // ── Step 2: show skeleton immediately so iframe is never blank ──────
+  // This fills the space visually during the JSON fetch, eliminating the
+  // 1px-to-full-height jump that causes the load glitch.
+  show("loading-view");
+
+  // ── Step 3: fetch polls.json and look up this course + poll ──────
   // Cache-busted with ?v= so stale JSON is never served after an update.
   // Bump the version number in the JSON filename whenever polls.json changes.
   fetch("polls.json?v=1.0")
@@ -416,6 +421,7 @@ var POLL       = null;
     });
     renderResults(initialCounts, 1, false, cachedAnswer);
   } else {
+    hide("loading-view");
     show("vote-view");
   }
 
@@ -643,7 +649,10 @@ var POLL       = null;
   })();
 
   function sendHeight() {
-    var currentHeight = document.documentElement.offsetHeight;
+    // scrollHeight on documentElement gives the most reliable full height.
+    // We subtract 1px to prevent a rounding error that can cause a persistent
+    // 1px scrollbar, which then inflates scrollHeight creating a feedback loop.
+    var currentHeight = document.documentElement.scrollHeight - 1;
     // Only send if height has genuinely changed
     if (currentHeight === lastHeight) {
       stableCount++;
