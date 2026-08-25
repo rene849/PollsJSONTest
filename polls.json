@@ -1,0 +1,36 @@
+{
+  "courses": [
+    {
+      "courseID": "inr",
+      "sheetID": "1NdKWvHFaJ__qSawjw_AyZ0tTzArL1ZsJNAiJuPrAI80",
+      "polls": [
+        {
+          "pollID": "poll-001",
+          "question": "Will the IoT be more beneficial than dangerous?",
+          "options": ["Yes", "I don't know", "No"]
+        },
+        {
+          "pollID": "poll-002",
+          "question": "Do you think privacy with regard to technology should be a constitutional right?",
+          "options": ["Yes", "I don't know", "No"]
+        }
+      ]
+    },
+    {
+      "courseID": "bsw",
+      "sheetID": "1-JbNskmlkAHbZwING5ceU1swJvA650X3h-XgjqSk054",
+      "polls": [
+        {
+          "pollID": "poll-001",
+          "question": "When you're in sudden danger, do you automatically cry \"help!\" or \"aid!\"?",
+          "options": ["Help!", "Aid!"]
+        },
+        {
+          "pollID": "poll-002",
+          "question": "Which do you crave more: friendship or amity?",
+          "options": ["Friendship", "Amity"]
+        }
+      ]
+    }
+  ]
+}
