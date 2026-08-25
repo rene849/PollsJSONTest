@@ -635,7 +635,12 @@ var POLL       = null;
   // instead of falling back to origin-only matching.
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
-  var pollId   = params.get('pollID')   || null;
+  // pollId must match what the existing Moodle listener extracts from the pathname
+  // e.g. "PollsJSONTest" from /PollsJSONTest/index.html - NOT the pollID URL param
+  var pollId = (function() {
+    var parts = window.location.pathname.split('/').filter(Boolean);
+    return parts.length ? parts[0] : null;
+  })();
   var courseId = params.get('courseID') || null;
 
   function sendHeight() {
