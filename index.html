@@ -425,12 +425,6 @@ var POLL       = null;
     show("vote-view");
   }
 
-  // Fade the card in now that content is ready
-  var pollCard = document.querySelector(".poll");
-  if (pollCard) {
-    requestAnimationFrame(function() { pollCard.classList.add("ready"); });
-  }
-
   var urlUid = new URLSearchParams(window.location.search).get("uid");
   if (urlUid) {
     uid = urlUid;
