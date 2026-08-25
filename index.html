@@ -35,7 +35,7 @@
   body { padding: 16px; }
 
   /* ── Poll card ─────────────────────────────────────────────────
-     Outer wrapper. Height grows naturally with content — no fixed min-height.
+     Outer wrapper. min-height prevents the card collapsing while
      the skeleton loads. Keep in sync with iframe height guide above.
      ──────────────────────────────────────────────────────────── */
   .poll {
@@ -47,13 +47,10 @@
     background: var(--bg);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     padding: 24px;
-    /* min-height removed — card now grows naturally with content */
+    /* min-height removed — card grows with content */
     display: flex;
     flex-direction: column;
-    opacity: 0;
-    transition: opacity 0.2s ease;
   }
-  .poll.ready { opacity: 1; }
 
   /* ── Question text ─────────────────────────────────────────── */
   .poll-question {
@@ -306,8 +303,6 @@
 <body>
 
 <script>
-// SCRIPT_URL and POLL are now set dynamically after fetching polls.json
-// See the initialisation block below
 var SCRIPT_URL = null;
 var POLL       = null;
 </script>
@@ -352,43 +347,28 @@ var POLL       = null;
   var hasVoted = false;
   var selected = null;
 
-  // Cache key includes courseId + pollId + intakeId so each poll/intake is independent
   var CACHE_KEY = (courseId && pollId && intakeId)
     ? "ee-poll-voted-" + courseId + "-" + pollId + "-" + intakeId
     : null;
 
-  // ── Step 1: validate required URL params ─────────────────────────
   if (!intakeId || !courseId || !pollId) {
     showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
     return;
   }
 
-  // ── Step 2: fetch polls.json and look up this course + poll ──────
-  // Cache-busted with ?v= so stale JSON is never served after an update.
-  // Bump the version number in the JSON filename whenever polls.json changes.
-  fetch("polls.json?v=1.2")
+  fetch("polls.json?v=1.0")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
       return r.json();
     })
     .then(function(data) {
-      var course = (data.courses || []).find(function(c) {
-        return c.courseID === courseId;
-      });
+      var course = (data.courses || []).find(function(c) { return c.courseID === courseId; });
       if (!course) throw new Error("Course not found: " + courseId);
-
-      var poll = (course.polls || []).find(function(p) {
-        return p.pollID === pollId;
-      });
+      var poll = (course.polls || []).find(function(p) { return p.pollID === pollId; });
       if (!poll) throw new Error("Poll not found: " + pollId);
-
-      // Set globals used by the rest of the script
       POLL = { question: poll.question, options: poll.options };
-
-      // Build the Apps Script URL using the scriptUrl and sheetID from the JSON
-      if (!course.scriptUrl) throw new Error("No scriptUrl found for course: " + courseId);
+      if (!course.scriptUrl) throw new Error("No scriptUrl for course: " + courseId);
       SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
-
       initialisePoll();
     })
     .catch(function(err) {
@@ -396,7 +376,6 @@ var POLL       = null;
       console.error("Poll load error:", err);
     });
 
-  // ── Step 3: run once JSON is loaded ──────────────────────────────
   function initialisePoll() {
   document.getElementById("poll-question").textContent = POLL.question;
   buildSkeleton();
@@ -418,10 +397,7 @@ var POLL       = null;
       initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
     });
     renderResults(initialCounts, 1, false, cachedAnswer);
-    var pollCard = document.querySelector(".poll");
-    if (pollCard) requestAnimationFrame(function() { pollCard.classList.add("ready"); });
   } else {
-    hide("loading-view");
     show("vote-view");
   }
 
@@ -634,65 +610,55 @@ var POLL       = null;
 <script>
 // Frame messaging heights alignment hooks
 (function() {
-  var lastHeight   = 0;
-  var stableCount  = 0;
-  var roTimer      = null;   // debounce timer for ResizeObserver
+  var lastHeight = 0;
+  var stableCount = 0;
 
-  // pollId must match what the existing Moodle listener extracts from the
-  // iframe src pathname — e.g. "PollsJSONTest" from /PollsJSONTest/index.html
+  // Derive pollId/intakeId so the parent's stability check can use them
+  // instead of falling back to origin-only matching.
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
   var courseId = params.get('courseID') || null;
-  var pollId   = (function() {
+  // pollId must match what the Moodle listener extracts from the iframe src pathname
+  var pollId = (function() {
     var parts = window.location.pathname.split('/').filter(Boolean);
     return parts.length ? parts[0] : null;
   })();
 
   function sendHeight() {
-    // scrollHeight on documentElement gives the most reliable full height.
-    // We subtract 1px to prevent a rounding error that can cause a persistent
-    // 1px scrollbar, which then inflates scrollHeight creating a feedback loop.
-    var currentHeight = document.documentElement.scrollHeight - 1;
-    // Only send if height has genuinely changed
+    var currentHeight = document.body.scrollHeight;
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
     } else {
-      stableCount  = 0;
-      lastHeight   = currentHeight;
+      stableCount = 0;
+      lastHeight = currentHeight;
     }
     window.parent.postMessage({
-      type:     'iframe-height',
+      type: 'iframe-height',
       courseId: courseId,
-      pollId:   pollId,
+      pollId: pollId,
       intakeId: intakeId,
-      height:   currentHeight
+      height: currentHeight
     }, '*');
   }
 
-  // Send an immediate estimate so the iframe never sits at 1px.
-  // This fires before the JSON fetch completes, so the parent gets
-  // a sensible height right away and avoids the 1px -> full jump.
+  // Fire immediately - don't wait 500ms before the first correction.
+  // This is what closes the visible gap on the shorter (pre-vote) state.
   sendHeight();
 
-  // Follow-up burst after content renders — catches the real height
-  // once the poll question and options are in the DOM.
-  var retryCount    = 0;
+  // Keep the short retry burst as a safety net for late web-font/layout shifts
+  var retryCount = 0;
   var retryInterval = setInterval(function() {
     sendHeight();
     retryCount++;
-    if (retryCount >= 5) clearInterval(retryInterval);
-  }, 400);
+    if (retryCount >= 10) clearInterval(retryInterval);
+  }, 300);
 
-  // Re-fire on genuine content height changes (e.g. vote → results transition)
-  // Debounced to avoid flooding the parent with messages during animations.
+  // Re-fire on any genuine content height change (vote -> results, errors, etc.)
   if (window.ResizeObserver) {
     var observer = new ResizeObserver(function() {
-      clearTimeout(roTimer);
-      roTimer = setTimeout(function() {
-        stableCount = 0;
-        sendHeight();
-      }, 100);
+      stableCount = 0;
+      sendHeight();
     });
     observer.observe(document.body);
   }
