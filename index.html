@@ -382,9 +382,9 @@ var POLL       = null;
       // Set globals used by the rest of the script
       POLL = { question: poll.question, options: poll.options };
 
-      // Build the Apps Script URL using the sheetID from the JSON
-      SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxI2asjsvXhJ9RHo3GFlSbbAvRL08knfKty_iX64SHv6hwM7gix5WR2IRV0XOGpClIQ/exec"
-        + "?sheetId=" + encodeURIComponent(course.sheetID);
+      // Build the Apps Script URL using the scriptUrl and sheetID from the JSON
+      if (!course.scriptUrl) throw new Error("No scriptUrl found for course: " + courseId);
+      SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
 
       initialisePoll();
     })
@@ -444,7 +444,7 @@ var POLL       = null;
   function checkVoteStatus() {
     fetch(SCRIPT_URL, {
       method: "POST",
-      body: JSON.stringify({ action: "load", intakeId: intakeId, uid: uid })
+      body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -526,6 +526,7 @@ var POLL       = null;
       body: JSON.stringify({
         action:   "vote",
         intakeId: intakeId,
+        pollId:   pollId,
         option:   chosenOption,
         uid:      uid
       })
