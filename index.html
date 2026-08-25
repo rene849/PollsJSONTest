@@ -50,7 +50,10 @@
     /* min-height removed — card now grows naturally with content */
     display: flex;
     flex-direction: column;
+    opacity: 0;
+    transition: opacity 0.2s ease;
   }
+  .poll.ready { opacity: 1; }
 
   /* ── Question text ─────────────────────────────────────────── */
   .poll-question {
@@ -360,15 +363,10 @@ var POLL       = null;
     return;
   }
 
-  // ── Step 2: show skeleton immediately so iframe is never blank ──────
-  // This fills the space visually during the JSON fetch, eliminating the
-  // 1px-to-full-height jump that causes the load glitch.
-  show("loading-view");
-
-  // ── Step 3: fetch polls.json and look up this course + poll ──────
+  // ── Step 2: fetch polls.json and look up this course + poll ──────
   // Cache-busted with ?v= so stale JSON is never served after an update.
   // Bump the version number in the JSON filename whenever polls.json changes.
-  fetch("polls.json?v=1.0")
+  fetch("polls.json?v=1.2")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
       return r.json();
@@ -420,9 +418,17 @@ var POLL       = null;
       initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
     });
     renderResults(initialCounts, 1, false, cachedAnswer);
+    var pollCard = document.querySelector(".poll");
+    if (pollCard) requestAnimationFrame(function() { pollCard.classList.add("ready"); });
   } else {
     hide("loading-view");
     show("vote-view");
+  }
+
+  // Fade the card in now that content is ready
+  var pollCard = document.querySelector(".poll");
+  if (pollCard) {
+    requestAnimationFrame(function() { pollCard.classList.add("ready"); });
   }
 
   var urlUid = new URLSearchParams(window.location.search).get("uid");
