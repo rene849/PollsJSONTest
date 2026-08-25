@@ -628,56 +628,61 @@ var POLL       = null;
 <script>
 // Frame messaging heights alignment hooks
 (function() {
-  var lastHeight = 0;
-  var stableCount = 0;
+  var lastHeight   = 0;
+  var stableCount  = 0;
+  var roTimer      = null;   // debounce timer for ResizeObserver
 
-  // Derive pollId/intakeId so the parent's stability check can use them
-  // instead of falling back to origin-only matching.
+  // pollId must match what the existing Moodle listener extracts from the
+  // iframe src pathname — e.g. "PollsJSONTest" from /PollsJSONTest/index.html
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
-  // pollId must match what the existing Moodle listener extracts from the pathname
-  // e.g. "PollsJSONTest" from /PollsJSONTest/index.html - NOT the pollID URL param
-  var pollId = (function() {
+  var courseId = params.get('courseID') || null;
+  var pollId   = (function() {
     var parts = window.location.pathname.split('/').filter(Boolean);
     return parts.length ? parts[0] : null;
   })();
-  var courseId = params.get('courseID') || null;
 
   function sendHeight() {
     var currentHeight = document.body.scrollHeight;
+    // Only send if height has genuinely changed
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
     } else {
-      stableCount = 0;
-      lastHeight = currentHeight;
+      stableCount  = 0;
+      lastHeight   = currentHeight;
     }
     window.parent.postMessage({
-      type: 'iframe-height',
+      type:     'iframe-height',
       courseId: courseId,
-      pollId: pollId,
+      pollId:   pollId,
       intakeId: intakeId,
-      height: currentHeight
+      height:   currentHeight
     }, '*');
   }
 
-  // Fire immediately - don't wait 500ms before the first correction.
-  // This is what closes the visible gap on the shorter (pre-vote) state.
-  sendHeight();
-
-  // Keep the short retry burst as a safety net for late web-font/layout shifts
-  var retryCount = 0;
-  var retryInterval = setInterval(function() {
+  // Initial burst: wait for content to paint before first message,
+  // then send a small number of follow-ups to catch late layout shifts.
+  // Fewer, slower retries = less visible jumping on load.
+  setTimeout(function() {
     sendHeight();
-    retryCount++;
-    if (retryCount >= 10) clearInterval(retryInterval);
-  }, 300);
+    var retryCount    = 0;
+    var retryInterval = setInterval(function() {
+      sendHeight();
+      retryCount++;
+      if (retryCount >= 4) clearInterval(retryInterval);
+    }, 500);
+  }, 100);
 
-  // Re-fire on any genuine content height change (vote -> results, errors, etc.)
+  // Re-fire on genuine content height changes (e.g. vote → results transition)
+  // Debounced to avoid flooding the parent with messages during animations.
   if (window.ResizeObserver) {
     var observer = new ResizeObserver(function() {
-      stableCount = 0;
-      sendHeight();
+      clearTimeout(roTimer);
+      roTimer = setTimeout(function() {
+        stableCount = 0;
+        sendHeight();
+      }, 100);
     });
     observer.observe(document.body);
   }
