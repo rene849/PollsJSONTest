@@ -537,7 +537,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging height script (Eliminates scrollbars completely)
+// Frame messaging height script (Fixes spacing gaps dynamically)
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -549,8 +549,7 @@ var POLL       = null;
   var pollId   = params.get('pollID')   || null;
 
   function predictHeight(n) {
-    // Exact element calculation + 16px extra breathing space for high DPI scaling
-    return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 16;
+    return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 12;
   }
 
   function postHeight(h) {
@@ -564,8 +563,11 @@ var POLL       = null;
   }
 
   function sendHeight() {
-    // Ceil rounding eliminates fractional pixel triggers
-    var currentHeight = Math.ceil(document.body.offsetHeight) + 16;
+    var pollCard = document.querySelector('.poll');
+    var currentHeight = pollCard 
+      ? Math.ceil(pollCard.getBoundingClientRect().height) + 32 
+      : Math.ceil(document.body.offsetHeight);
+
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
@@ -576,14 +578,14 @@ var POLL       = null;
     postHeight(currentHeight);
   }
 
-  postHeight(predictHeight(3));
-
+  // Poll for option count before doing initial height post
   var countPoller = setInterval(function() {
     if (window.__pollOptionCount) {
       clearInterval(countPoller);
       postHeight(predictHeight(window.__pollOptionCount));
+      setTimeout(sendHeight, 50);
     }
-  }, 50);
+  }, 20);
   setTimeout(function() { clearInterval(countPoller); }, 4000);
 
   if (window.ResizeObserver) {
@@ -592,13 +594,13 @@ var POLL       = null;
       roTimer = setTimeout(function() {
         stableCount = 0;
         sendHeight();
-      }, 100);
+      }, 50);
     });
     observer.observe(document.body);
   }
 
   window.addEventListener('load', function() {
-    setTimeout(sendHeight, 300);
+    setTimeout(sendHeight, 200);
   });
 })();
 </script>
