@@ -537,7 +537,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging height script
+// Frame messaging height script (Reliable auto-sizing fix)
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -546,13 +546,14 @@ var POLL       = null;
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
   var courseId = params.get('courseID') || null;
-  var pollId   = params.get('pollID')   || null; // Corrected: Reads directly from URL query param
+  var pollId   = params.get('pollID')   || null;
 
   function predictHeight(n) {
     return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 12;
   }
 
   function postHeight(h) {
+    if (!h || h <= 0) return;
     window.parent.postMessage({
       type:     'iframe-height',
       courseId: courseId,
@@ -568,6 +569,8 @@ var POLL       = null;
       ? Math.ceil(pollCard.getBoundingClientRect().height) + 32 
       : Math.ceil(document.body.offsetHeight);
 
+    if (currentHeight <= 32) return; // Ignore unrendered states
+
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
@@ -578,14 +581,17 @@ var POLL       = null;
     postHeight(currentHeight);
   }
 
-  // Poll for option count before doing initial height post
+  // Send an immediate baseline height so the iframe NEVER collapses on page load
+  postHeight(predictHeight(3));
+
+  // Poll for exact option count from polls.json
   var countPoller = setInterval(function() {
     if (window.__pollOptionCount) {
       clearInterval(countPoller);
       postHeight(predictHeight(window.__pollOptionCount));
       setTimeout(sendHeight, 50);
     }
-  }, 20);
+  }, 30);
   setTimeout(function() { clearInterval(countPoller); }, 4000);
 
   if (window.ResizeObserver) {
