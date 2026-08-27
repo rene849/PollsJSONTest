@@ -537,7 +537,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging height script (Fixes spacing gaps dynamically)
+// Frame messaging height script
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -546,7 +546,7 @@ var POLL       = null;
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
   var courseId = params.get('courseID') || null;
-  var pollId   = params.get('pollID')   || null;
+  var pollId   = params.get('pollID')   || null; // Corrected: Reads directly from URL query param
 
   function predictHeight(n) {
     return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 12;
