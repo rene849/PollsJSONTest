@@ -28,7 +28,7 @@
     color: var(--text); 
     overflow: hidden; 
     margin: 0;
-    padding: 16px; 
+    padding: 12px; 
   }
 
   .poll {
@@ -42,6 +42,7 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
   }
 
   .poll-question {
@@ -55,7 +56,6 @@
   #loading-view, #vote-view, #results-view {
     display: none;
     flex-direction: column;
-    flex-grow: 1;
   }
 
   .options, .results {
@@ -64,7 +64,7 @@
     gap: 12px;
   }
 
-  /* Fixed metrics to ensure exact 1:1 match between vote view & results view */
+  /* Fixed matching height (60px) for both vote buttons and result rows */
   .option-btn {
     display: flex;
     align-items: center;
@@ -78,7 +78,7 @@
     width: 100%;
     transition: background 0.15s, border-color 0.15s;
     font-family: var(--font);
-    height: 64px;
+    height: 60px;
     text-align: left;
     line-height: 1.35;
   }
@@ -115,12 +115,12 @@
 
   .result-row {
     border: 1px solid #e0e0e0;
-    padding: 10px 14px;
+    padding: 8px 14px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     border-radius: var(--radius);
-    height: 64px; /* Locked to 64px to match option-btn height exactly */
+    height: 60px; /* Locked to 60px to match option-btn height exactly */
   }
 
   .result-label {
@@ -209,7 +209,7 @@
     animation: shimmer 1.2s infinite;
   }
 
-  .skel-option { height: 64px; margin-bottom: 12px; }
+  .skel-option { height: 60px; margin-bottom: 12px; }
   .skel-option:last-child { margin-bottom: 0; }
   .skel-submit { height: 44px; margin-top: 16px; }
 
@@ -230,7 +230,7 @@
     text-align: center;
   }
 
-  #error-view { display: none; flex-grow: 1; }
+  #error-view { display: none; }
 
   @media (max-width: 480px) {
     .poll { padding: 16px; }
@@ -479,7 +479,6 @@ var POLL       = null;
       hide("vote-view");
       show("results-view");
 
-      // Notify parent instantly on view switch to prevent cut-off transition
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
 
       requestAnimationFrame(function() {
@@ -532,7 +531,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging height script (Precise height sync)
+// Frame messaging height script
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -558,10 +557,8 @@ var POLL       = null;
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
 
-    // Measures total rendered card height + document top/bottom body margins (32px total)
-    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 32;
-
-    if (currentHeight <= 32) return;
+    // Card height + 24px body padding + 12px safety buffer
+    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 36;
 
     if (currentHeight === lastHeight) {
       stableCount++;
@@ -573,13 +570,12 @@ var POLL       = null;
     postHeight(currentHeight);
   }
 
-  // Global trigger hook to recalculate frame immediately after DOM state updates
   window.__triggerFrameHeight = function() {
     stableCount = 0;
     sendHeight();
   };
 
-  // Immediate send to sizing calculation
+  // Immediate send
   sendHeight();
 
   var countPoller = setInterval(function() {
