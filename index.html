@@ -6,34 +6,31 @@
 <title>Poll</title>
 
 <style>
-  /* ── Accessible Design Tokens ───────────────────────────────── */
   :root {
-    --brand:        #2E45B8;   /* Economist Chicago 45 */
-    --bar-bg:       #ebedfa;   /* Economist Chicago 95 */
+    --brand:        #2E45B8;
+    --bar-bg:       #ebedfa;
     --text:         #0d0d0d;
-    --text-muted:   #0d0d0d;   /* AAA Compliance */
+    --text-muted:   #0d0d0d;
     --bg:           #ffffff;
     --radius:       4px;
-    --font:         system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --focus:        #E3120B;   /* Matches Moodle focus ring */
-    --error-bg:     #ffffff;   
-    --error-text:   #E3120B;   
-    --error-border: #E3120B; 
+    --font:         system-ui, 'Segoe UI', sans-serif;
+    --focus:        #E3120B;
+    --error-bg:     #ffffff;
+    --error-text:   #E3120B;
+    --error-border: #E3120B;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   
-  /* Prevent scrollbars inside the iframe document */
   html, body { 
     font-family: var(--font); 
     background: transparent; 
     color: var(--text); 
-    overflow: hidden; 
+    overflow: hidden; /* Prevents scrollbars */
     margin: 0;
     padding: 16px; 
   }
 
-  /* ── Poll Outer Card ─────────────────────────────────────────── */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -47,7 +44,6 @@
     flex-direction: column;
   }
 
-  /* ── Question Header ─────────────────────────────────────────── */
   .poll-question {
     font-size: 18px;
     font-weight: 600;
@@ -56,7 +52,6 @@
     margin-bottom: 20px;
   }
 
-  /* ── View Switching Logic ────────────────────────────────────── */
   #loading-view, #vote-view, #results-view {
     display: none;
     flex-direction: column;
@@ -66,14 +61,13 @@
   .options, .results {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
-  /* ── Accessible Interactive Buttons ───────────────────────────── */
   .option-btn {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     border: 1px solid #ddd;
     border-radius: var(--radius);
     background: var(--bg);
@@ -81,23 +75,18 @@
     font-size: 15px;
     color: var(--text);
     width: 100%;
-    transition: background 0.15s, border-color 0.15s;
+    transition: 0.15s;
     font-family: var(--font);
-    min-height: 64px;
-    text-align: left;
-    line-height: 1.35;
+    height: 50px;
   }
 
   .option-btn:hover { background: #f9f9f9; border-color: var(--brand); }
   .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  
-  /* Focus Indicator for Keyboard Navigation */
   .option-btn:focus-visible {
     outline: 5px solid var(--focus);
     outline-offset: 1px;
   }
 
-  /* ── Submit Button ───────────────────────────────────────────── */
   .submit-btn {
     margin-top: 16px;
     width: 100%;
@@ -121,23 +110,20 @@
     outline-offset: 1px;
   }
 
-  /* ── Results Rows ────────────────────────────────────────────── */
   .result-row {
     border: 1px solid #e0e0e0;
     padding: 10px 14px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     border-radius: var(--radius);
-    min-height: 64px;
+    height: 74px;
   }
 
   .result-label {
     font-size: 14px;
     font-weight: 500;
-    padding-bottom: 6px;
+    padding-bottom: 0.5rem;
     color: var(--text);
-    line-height: 1.3;
   }
 
   .result-label.mine { color: var(--brand); font-weight: 700; }
@@ -162,38 +148,40 @@
     height: 100%;
     background: var(--brand);
     width: 0%;
-    transition: width 0.5s cubic-bezier(0.1, 0.5, 0.5, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    transition: width 0.5s cubic-bezier(0.1,0.5,0.5,1);
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
     min-width: 24px;
-    padding: 0;
+    padding: 0 !important;
   }
 
   .inner-number {
-    color: white;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    display: block;
-    margin: 0 auto;
+    color: white !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    display: block !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
   }
 
   .result-pct {
-    font-size: 14px;
+    font-size: 14px !important;
     min-width: 38px;
     text-align: right;
     font-weight: 500;
     color: var(--text);
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    height: 20px;
-    line-height: 1;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 20px !important;
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  /* ── Footer Info Line ────────────────────────────────────────── */
   .footer-text-line {
     margin-top: 16px;
     font-size: 14px;
@@ -209,7 +197,6 @@
     font-weight: 500;
   }
 
-  /* ── Skeleton Loading State ───────────────────────────────────── */
   .skel {
     border-radius: var(--radius);
     background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
@@ -217,7 +204,7 @@
     animation: shimmer 1.2s infinite;
   }
 
-  .skel-option { height: 64px; margin-bottom: 12px; }
+  .skel-option { height: 50px; margin-bottom: 10px; }
   .skel-option:last-child { margin-bottom: 0; }
   .skel-submit { height: 44px; margin-top: 16px; }
 
@@ -226,17 +213,16 @@
     100% { background-position: -200% 0; }
   }
 
-  /* ── Accessible Error Banner ─────────────────────────────────── */
   .error-banner {
-    padding: 16px;
-    background: var(--error-bg);
-    border: 1px solid var(--error-border);
-    border-radius: var(--radius);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--error-text);
-    line-height: 1.5;
-    text-align: center;
+    padding: 16px !important;
+    background: var(--error-bg) !important;
+    border: 1px solid var(--error-border) !important;
+    border-radius: var(--radius) !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--error-text) !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
   }
 
   #error-view { display: none; flex-grow: 1; }
@@ -255,21 +241,21 @@ var SCRIPT_URL = null;
 var POLL       = null;
 </script>
 
-<main class="poll" role="region" aria-labelledby="poll-question">
-  <h2 class="poll-question" id="poll-question"></h2>
+<div class="poll">
+  <div class="poll-question" id="poll-question"></div>
 
-  <div id="loading-view" aria-hidden="true">
+  <div id="loading-view">
     <div id="skel-options"></div>
     <div class="skel skel-submit"></div>
   </div>
 
   <div id="vote-view">
-    <div class="options" id="options-list" role="single-select"></div>
+    <div class="options" id="options-list"></div>
     <button class="submit-btn" id="submit-btn" disabled onclick="submitVote()">Submit</button>
-    <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
+    <div id="vote-error-inline" class="error-banner" style="display:none"></div>
   </div>
 
-  <div id="results-view" aria-live="polite">
+  <div id="results-view">
     <div class="results" id="results-list"></div>
     <div class="footer-text-line">
       <span id="footer-text">You've already voted.</span>
@@ -277,10 +263,10 @@ var POLL       = null;
     </div>
   </div>
 
-  <div id="error-view" role="alert">
+  <div id="error-view">
     <div class="error-banner" id="error-msg"></div>
   </div>
-</main>
+</div>
 
 <script>
 (function () {
@@ -312,10 +298,8 @@ var POLL       = null;
       if (!course) throw new Error("Course not found: " + courseId);
       var poll = (course.polls || []).find(function(p) { return p.pollID === pollId; });
       if (!poll) throw new Error("Poll not found: " + pollId);
-      
       POLL = { question: poll.question, options: poll.options };
       window.__pollOptionCount = poll.options.length;
-      
       if (!course.scriptUrl) throw new Error("No scriptUrl for course: " + courseId);
       SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
       initialisePoll();
@@ -342,7 +326,7 @@ var POLL       = null;
       show("vote-view");
     }
 
-    var urlUid = params.get("uid");
+    var urlUid = new URLSearchParams(window.location.search).get("uid");
     if (urlUid) {
       uid = urlUid;
       uidReady = true;
@@ -404,13 +388,11 @@ var POLL       = null;
         var btn = document.createElement("button");
         btn.className   = "option-btn";
         btn.textContent = opt;
-        btn.setAttribute("aria-pressed", "false");
         btn.addEventListener("click", function() {
           selected = i;
           document.querySelectorAll(".option-btn").forEach(function(b, idx) {
             b.style.borderColor = (idx === i) ? "var(--brand)" : "#ddd";
             b.style.background  = (idx === i) ? "#f4f6ff"      : "#fff";
-            b.setAttribute("aria-pressed", idx === i ? "true" : "false");
           });
           document.getElementById("submit-btn").disabled = false;
         });
@@ -461,7 +443,7 @@ var POLL       = null;
       var safeTotal = total || 0;
       box.innerHTML = "";
 
-      POLL.options.forEach(function(opt) {
+      POLL.options.forEach(function(opt, idx) {
         var votes = (counts && counts[opt]) ? counts[opt] : 0;
         var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
         var mine  = opt === myAnswer;
@@ -473,7 +455,7 @@ var POLL       = null;
             (mine ? "✓ " : "") + opt +
           '</div>' +
           '<div class="bar-container">' +
-            '<div class="bar-track" aria-label="' + pct + '% of votes">' +
+            '<div class="bar-track">' +
               '<div class="bar-fill" style="width:0%">' +
                 '<span class="inner-number">' + votes + '</span>' +
               '</div>' +
@@ -537,7 +519,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging height script (Reliable auto-sizing fix)
+// Original Working Resizer Hook
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -546,14 +528,18 @@ var POLL       = null;
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
   var courseId = params.get('courseID') || null;
-  var pollId   = params.get('pollID')   || null;
+
+  // Kept intact per baseline logic
+  var pollId = (function() {
+    var parts = window.location.pathname.split('/').filter(Boolean);
+    return parts.length ? parts[0] : null;
+  })();
 
   function predictHeight(n) {
-    return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 12;
+    return 32 + 48 + 45 + (n * 50) + ((n - 1) * 10) + 60 + 4;
   }
 
   function postHeight(h) {
-    if (!h || h <= 0) return;
     window.parent.postMessage({
       type:     'iframe-height',
       courseId: courseId,
@@ -564,13 +550,7 @@ var POLL       = null;
   }
 
   function sendHeight() {
-    var pollCard = document.querySelector('.poll');
-    var currentHeight = pollCard 
-      ? Math.ceil(pollCard.getBoundingClientRect().height) + 32 
-      : Math.ceil(document.body.offsetHeight);
-
-    if (currentHeight <= 32) return; // Ignore unrendered states
-
+    var currentHeight = document.documentElement.scrollHeight;
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
@@ -581,17 +561,15 @@ var POLL       = null;
     postHeight(currentHeight);
   }
 
-  // Send an immediate baseline height so the iframe NEVER collapses on page load
+  // Baseline initial execution triggers
   postHeight(predictHeight(3));
 
-  // Poll for exact option count from polls.json
   var countPoller = setInterval(function() {
     if (window.__pollOptionCount) {
       clearInterval(countPoller);
       postHeight(predictHeight(window.__pollOptionCount));
-      setTimeout(sendHeight, 50);
     }
-  }, 30);
+  }, 50);
   setTimeout(function() { clearInterval(countPoller); }, 4000);
 
   if (window.ResizeObserver) {
@@ -600,13 +578,13 @@ var POLL       = null;
       roTimer = setTimeout(function() {
         stableCount = 0;
         sendHeight();
-      }, 50);
+      }, 200);
     });
     observer.observe(document.body);
   }
 
   window.addEventListener('load', function() {
-    setTimeout(sendHeight, 200);
+    setTimeout(sendHeight, 300);
   });
 })();
 </script>
