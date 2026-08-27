@@ -6,24 +6,34 @@
 <title>Poll</title>
 
 <style>
+  /* ── Accessible Design Tokens ───────────────────────────────── */
   :root {
-    --brand:        #2E45B8;
-    --bar-bg:       #ebedfa;
+    --brand:        #2E45B8;   /* Economist Chicago 45 */
+    --bar-bg:       #ebedfa;   /* Economist Chicago 95 */
     --text:         #0d0d0d;
-    --text-muted:   #0d0d0d;
+    --text-muted:   #0d0d0d;   /* AAA Compliance */
     --bg:           #ffffff;
     --radius:       4px;
-    --font:         system-ui, 'Segoe UI', sans-serif;
-    --focus:        #E3120B;
-    --error-bg:     #ffffff;
-    --error-text:   #E3120B;
-    --error-border: #E3120B;
+    --font:         system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --focus:        #E3120B;   /* Matches Moodle focus ring */
+    --error-bg:     #ffffff;   
+    --error-text:   #E3120B;   
+    --error-border: #E3120B; 
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { font-family: var(--font); background: transparent; color: var(--text); overflow-x: hidden; }
-  body { padding: 16px; }
+  
+  /* Prevent scrollbars inside the iframe document */
+  html, body { 
+    font-family: var(--font); 
+    background: transparent; 
+    color: var(--text); 
+    overflow: hidden; 
+    margin: 0;
+    padding: 16px; 
+  }
 
+  /* ── Poll Outer Card ─────────────────────────────────────────── */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -37,6 +47,7 @@
     flex-direction: column;
   }
 
+  /* ── Question Header ─────────────────────────────────────────── */
   .poll-question {
     font-size: 18px;
     font-weight: 600;
@@ -45,6 +56,7 @@
     margin-bottom: 20px;
   }
 
+  /* ── View Switching Logic ────────────────────────────────────── */
   #loading-view, #vote-view, #results-view {
     display: none;
     flex-direction: column;
@@ -54,9 +66,10 @@
   .options, .results {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
+  /* ── Accessible Interactive Buttons ───────────────────────────── */
   .option-btn {
     display: flex;
     align-items: center;
@@ -68,20 +81,23 @@
     font-size: 15px;
     color: var(--text);
     width: 100%;
-    transition: 0.15s;
+    transition: background 0.15s, border-color 0.15s;
     font-family: var(--font);
-    min-height: 50px;
+    min-height: 64px;
     text-align: left;
-    line-height: 1.3;
+    line-height: 1.35;
   }
 
   .option-btn:hover { background: #f9f9f9; border-color: var(--brand); }
   .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  
+  /* Focus Indicator for Keyboard Navigation */
   .option-btn:focus-visible {
     outline: 5px solid var(--focus);
     outline-offset: 1px;
   }
 
+  /* ── Submit Button ───────────────────────────────────────────── */
   .submit-btn {
     margin-top: 16px;
     width: 100%;
@@ -105,19 +121,21 @@
     outline-offset: 1px;
   }
 
+  /* ── Results Rows ────────────────────────────────────────────── */
   .result-row {
     border: 1px solid #e0e0e0;
-    padding: 12px 14px;
+    padding: 10px 14px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     border-radius: var(--radius);
-    min-height: 70px;
+    min-height: 64px;
   }
 
   .result-label {
     font-size: 14px;
     font-weight: 500;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     color: var(--text);
     line-height: 1.3;
   }
@@ -144,7 +162,7 @@
     height: 100%;
     background: var(--brand);
     width: 0%;
-    transition: width 0.5s cubic-bezier(0.1,0.5,0.5,1);
+    transition: width 0.5s cubic-bezier(0.1, 0.5, 0.5, 1);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -175,6 +193,7 @@
     line-height: 1;
   }
 
+  /* ── Footer Info Line ────────────────────────────────────────── */
   .footer-text-line {
     margin-top: 16px;
     font-size: 14px;
@@ -190,6 +209,7 @@
     font-weight: 500;
   }
 
+  /* ── Skeleton Loading State ───────────────────────────────────── */
   .skel {
     border-radius: var(--radius);
     background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
@@ -197,7 +217,7 @@
     animation: shimmer 1.2s infinite;
   }
 
-  .skel-option { height: 50px; margin-bottom: 10px; }
+  .skel-option { height: 64px; margin-bottom: 12px; }
   .skel-option:last-child { margin-bottom: 0; }
   .skel-submit { height: 44px; margin-top: 16px; }
 
@@ -206,6 +226,7 @@
     100% { background-position: -200% 0; }
   }
 
+  /* ── Accessible Error Banner ─────────────────────────────────── */
   .error-banner {
     padding: 16px;
     background: var(--error-bg);
@@ -234,21 +255,21 @@ var SCRIPT_URL = null;
 var POLL       = null;
 </script>
 
-<div class="poll">
-  <div class="poll-question" id="poll-question"></div>
+<main class="poll" role="region" aria-labelledby="poll-question">
+  <h2 class="poll-question" id="poll-question"></h2>
 
-  <div id="loading-view">
+  <div id="loading-view" aria-hidden="true">
     <div id="skel-options"></div>
     <div class="skel skel-submit"></div>
   </div>
 
   <div id="vote-view">
-    <div class="options" id="options-list"></div>
+    <div class="options" id="options-list" role="single-select"></div>
     <button class="submit-btn" id="submit-btn" disabled onclick="submitVote()">Submit</button>
-    <div id="vote-error-inline" class="error-banner" style="display:none"></div>
+    <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
   </div>
 
-  <div id="results-view">
+  <div id="results-view" aria-live="polite">
     <div class="results" id="results-list"></div>
     <div class="footer-text-line">
       <span id="footer-text">You've already voted.</span>
@@ -256,10 +277,10 @@ var POLL       = null;
     </div>
   </div>
 
-  <div id="error-view">
+  <div id="error-view" role="alert">
     <div class="error-banner" id="error-msg"></div>
   </div>
-</div>
+</main>
 
 <script>
 (function () {
@@ -291,8 +312,10 @@ var POLL       = null;
       if (!course) throw new Error("Course not found: " + courseId);
       var poll = (course.polls || []).find(function(p) { return p.pollID === pollId; });
       if (!poll) throw new Error("Poll not found: " + pollId);
+      
       POLL = { question: poll.question, options: poll.options };
       window.__pollOptionCount = poll.options.length;
+      
       if (!course.scriptUrl) throw new Error("No scriptUrl for course: " + courseId);
       SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
       initialisePoll();
@@ -381,11 +404,13 @@ var POLL       = null;
         var btn = document.createElement("button");
         btn.className   = "option-btn";
         btn.textContent = opt;
+        btn.setAttribute("aria-pressed", "false");
         btn.addEventListener("click", function() {
           selected = i;
           document.querySelectorAll(".option-btn").forEach(function(b, idx) {
             b.style.borderColor = (idx === i) ? "var(--brand)" : "#ddd";
             b.style.background  = (idx === i) ? "#f4f6ff"      : "#fff";
+            b.setAttribute("aria-pressed", idx === i ? "true" : "false");
           });
           document.getElementById("submit-btn").disabled = false;
         });
@@ -448,7 +473,7 @@ var POLL       = null;
             (mine ? "✓ " : "") + opt +
           '</div>' +
           '<div class="bar-container">' +
-            '<div class="bar-track">' +
+            '<div class="bar-track" aria-label="' + pct + '% of votes">' +
               '<div class="bar-fill" style="width:0%">' +
                 '<span class="inner-number">' + votes + '</span>' +
               '</div>' +
@@ -512,7 +537,7 @@ var POLL       = null;
 </script>
 
 <script>
-// Frame messaging heights alignment hooks
+// Frame messaging height script (Eliminates scrollbars completely)
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -521,16 +546,11 @@ var POLL       = null;
   var params   = new URLSearchParams(window.location.search);
   var intakeId = params.get('intake')   || null;
   var courseId = params.get('courseID') || null;
+  var pollId   = params.get('pollID')   || null;
 
-  var pollId = (function() {
-    var parts = window.location.pathname.split('/').filter(Boolean);
-    return parts.length ? parts[0] : null;
-  })();
-
-  // Updated predictHeight math synced to exact CSS measurements
-  // Body padding (32px) + Card padding (48px) + Question/margin (~45px) + Options + Gaps + Submit (44px) + margin (16px)
   function predictHeight(n) {
-    return 32 + 48 + 45 + (n * 50) + ((n - 1) * 10) + 44 + 16 + 4;
+    // Exact element calculation + 16px extra breathing space for high DPI scaling
+    return 32 + 48 + 55 + (n * 64) + ((n - 1) * 12) + 44 + 16 + 16;
   }
 
   function postHeight(h) {
@@ -544,7 +564,8 @@ var POLL       = null;
   }
 
   function sendHeight() {
-    var currentHeight = document.documentElement.scrollHeight;
+    // Ceil rounding eliminates fractional pixel triggers
+    var currentHeight = Math.ceil(document.body.offsetHeight) + 16;
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
