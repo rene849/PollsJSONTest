@@ -1,4 +1,5 @@
 {
+  "_notes": "No versioning needed — polls.json is fetched fresh on every load. Just edit and push to GitHub.",
   "scriptUrl": "https://script.google.com/macros/s/AKfycbzpU9dcVui_afkBphquvX0yt8aGE_Nbbchbvrhyv995kgC0Xz_DNGzVHYVcq0dZEDKP/exec",
   "courses": [
     {
