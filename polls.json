@@ -2,34 +2,310 @@
   "scriptUrl": "https://script.google.com/macros/s/AKfycbydzYJTzAAQr5tM30WqVzvfM1ZvUq5DKB5VifWeSHuoYKgdFxBoCHH22ogBzkLfu2UN/exec",
   "courses": [
     {
-      "courseID": "inr",
-      "sheetID": "1NdKWvHFaJ__qSawjw_AyZ0tTzArL1ZsJNAiJuPrAI80",
+      "courseID": "bsw",
       "polls": [
         {
-          "pollID": "poll-001",
-          "question": "Will the IoT be more beneficial than dangerous?",
-          "options": ["Yes", "I don't know", "No"]
+          "pollID": "bsw-m3u2-notes-poll-1",
+          "sheetID": "1iwyT5nrK48cmvmnc4HX_ScRGah3B6V_tb8Q5rDHERxc",
+          "question": "Would you rather have a hearty greeting or a cordial one?",
+          "options": [
+            "Hearty",
+            "Cordial"
+          ]
         },
         {
-          "pollID": "poll-002",
-          "question": "Do you think privacy with regard to technology should be a constitutional right?",
-          "options": ["Yes", "I don't know", "No"]
+          "pollID": "bsw-m3u2-notes-poll-2",
+          "sheetID": "1RFBec_WyBStTWTAoPyo-OgTZwvxxzVArA451e51cxCM",
+          "question": "When you’re in sudden danger, do you automatically cry “help!” or “aid!”?",
+          "options": [
+            "Help!",
+            "Aid!"
+          ]
+        },
+        {
+          "pollID": "bsw-m3u2-notes-poll-3",
+          "sheetID": "1qoQp-9qPqp8VSaXYktwtQxe-0Iv-OEJeBSzQRtB2M8s",
+          "question": "Which do you crave more: friendship or amity?",
+          "options": [
+            "Friendship",
+            "Amity"
+          ]
+        },
+        {
+          "pollID": "bsw-m3u2-notes-poll-4",
+          "sheetID": "1jhNpfI_H2fZtMskQlThtb0czFsq3EVMq02IfA_SNZpI",
+          "question": "Which do you crave more: love or amorous relations?",
+          "options": [
+            "Love",
+            "Amorous relations"
+          ]
+        },
+        {
+          "pollID": "bsw-m5u2-video-set-poll",
+          "sheetID": "1DWhSy7-I51H3BmzyZ5FGIzXcRiIBOvyBimplk3mryNE",
+          "question": "Which chart would you use?",
+          "options": [
+            "Bar chart",
+            "Line chart",
+            "Pointline chart"
+          ]
         }
       ]
     },
     {
-      "courseID": "bsw",
-      "sheetID": "1-JbNskmlkAHbZwING5ceU1swJvA650X3h-XgjqSk054",
+      "courseID": "inr",
       "polls": [
         {
-          "pollID": "poll-001",
-          "question": "When you're in sudden danger, do you automatically cry \"help!\" or \"aid!\"?",
-          "options": ["Help!", "Aid!"]
+          "pollID": "inr-m1u1-critical-thinking-exercise-poll",
+          "sheetID": "1AoFBtJ3kmEhCSC8TYHKeugvc2Z5cAd0wwmuN2_uwzv8",
+          "question": "In your opinion, which one of these events has had the biggest effect on global politics since the second world war?",
+          "options": [
+            "The cold war",
+            "The unipolar moment of US dominance",
+            "The US-China rivalry"
+          ]
         },
         {
-          "pollID": "poll-002",
-          "question": "Which do you crave more: friendship or amity?",
-          "options": ["Friendship", "Amity"]
+          "pollID": "inr-m1u2-lesson-poll-1",
+          "sheetID": "1x0rSx7qgVqBosR08qvVbCEBwwqGV4PR_o3dk786qffI",
+          "question": "Does the cold war still matter?",
+          "options": [
+            "Yes",
+            "I’m not sure",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m1u2-lesson-poll-2",
+          "sheetID": "1dLbxK4aJZRV_RYZtbVsM2BnI-g18HkDysDI5UYc1UC0",
+          "question": "Do you agree with Lukin about the West’s abuse of power during the unipolar moment?",
+          "options": [
+            "Yes",
+            "I’m not sure",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m1u4-assignment-poll",
+          "sheetID": "1wHJCrMQkyw4HjMrXw6Vt3jnkpkW7gDnvtM-ePRdgIcw",
+          "question": "In your opinion, which one of these factors has had the biggest effect on global politics since the second world war?",
+          "options": [
+            "The cold war",
+            "The unipolar moment of US dominance",
+            "The US-China rivalry"
+          ]
+        },
+        {
+          "pollID": "inr-m2u1-critical-thinking-exercise-poll",
+          "sheetID": "1TH2zh3c0gc7O-8IjUtnv6j0ZrruShydk1hB6TU7bH6I",
+          "question": "Do you think it’s advantageous for the world to have one country as a “global leader”?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m2u1-lesson-poll",
+          "sheetID": "1f8R_Kp5HlYKYhO4a6rwdttk4S9j02WsActfw4V7HLsg",
+          "question": "Does the multilateral system greatly benefit the US?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m2u2-lesson-poll-1",
+          "sheetID": "1bgHMoQYSrpln4u0hHm0qe4hIWCBMCWZ9VrOI41lpwjs",
+          "question": "How far did Biden manage to restore the Pax Americana to its former glory?",
+          "options": [
+            "A lot",
+            "A little",
+            "Not at all",
+            "I don’t know"
+          ]
+        },
+        {
+          "pollID": "inr-m2u2-lesson-poll-2",
+          "sheetID": "1fxP-KIT_de9qv8zU1NNLhHNyHunKdbat3avFf19wm58",
+          "question": "Will Trump’s second term accelerate the decline of the Pax Americana?",
+          "options": [
+            "Yes",
+            "No",
+            "I don’t know"
+          ]
+        },
+        {
+          "pollID": "inr-m2u3-assignment-poll",
+          "sheetID": "1cy3RLBuVRtoPSmuqbyBs0_HP84H6DY4372uY_mdkqI0",
+          "question": "Do you think it’s advantageous for the world to have one country as a “global leader”?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m3u1-critical-thinking-exercise-poll",
+          "sheetID": "1q0tmE4mGhhrq2ocsz7MKwDsO-G-Jvfs4jJEv8VLEjIM",
+          "question": "Will China replace the US as the world’s dominant power?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m3u1-lesson-poll-1",
+          "sheetID": "1gIFsT6nPvlP5VaqoiYa49gcV-B3QRE2C74ute3oofjo",
+          "question": "China’s transformation should be seen as a “threat” rather than a “peaceful rise”.",
+          "options": [
+            "I agree",
+            "I’m not sure",
+            "I disagree"
+          ]
+        },
+        {
+          "pollID": "inr-m3u1-lesson-poll-2",
+          "sheetID": "1srjJwQm8Zmz64FGAdfkahbC7AVbn8hcE73bOEfKXsL8",
+          "question": "Is China better at dealing with emergencies than the US?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m3u2-lesson-poll-1",
+          "sheetID": "14WtWVafwxvxopASeYuk5riYeFVjbdt_V2tz7cX69nPc",
+          "question": "Has China come closer to its goal of being able to deny access by American forces in the western Pacific?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m3u2-lesson-poll-2",
+          "sheetID": "1mrERuPU4Go_VzOIO2TEPq9yA_QxsfSqvi8hUH3M86fQ",
+          "question": "Do you think China is accomplishing what it has set out to do: win over the world?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m3u2-lesson-poll-3",
+          "sheetID": "1TqkVzrv4cHW4bOU6pAX69KmvRtDkNKcWWoh0mHDxov4",
+          "question": "What is required for China to take the global “centre stage”?",
+          "options": [
+            "China to push the US out of the western Pacific",
+            "China to replace the US as the most powerful country",
+            "Something in between the above two options"
+          ]
+        },
+        {
+          "pollID": "inr-m3u3-assignment-poll",
+          "sheetID": "1dwIAr__Xu0rt7xqppIIiopowtzxjlTEJR9rLmebZ-oU",
+          "question": "Will China replace the US as the world’s dominant power?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m4u1-critical-thinking-exercise-poll",
+          "sheetID": "14ZlLCAcJ5UscETmNb4nPLFzCJ3KT0G4_9cHQHrWrPgA",
+          "question": "Which country is in the lead on the technology front?",
+          "options": [
+            "The US",
+            "China"
+          ]
+        },
+        {
+          "pollID": "inr-m4u1-lesson-poll-1",
+          "sheetID": "10w6vtfbQOqfUi13sRSW3tq6yc_eXIvh6rZlCDFPGPPo",
+          "question": "Will AI be more beneficial than dangerous?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m4u1-lesson-poll-2",
+          "sheetID": "1U6H3t9pj2DrhgUJCyP1wPthIrD_dvnqlAWeAn16C-mk",
+          "question": "Will the IoT be more beneficial than dangerous?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m4u2-lesson-poll",
+          "sheetID": "19EcXpU3kOAYfX5hCfpbuFVjZPeJW-zIp_M472DO4dBg",
+          "question": "Do you think privacy with regard to technology should be a constitutional right?",
+          "options": [
+            "Yes",
+            "I don’t know",
+            "No"
+          ]
+        },
+        {
+          "pollID": "inr-m4u4-assignment-poll",
+          "sheetID": "1q3isTUxV5JT1NU8rKpkJ0PK4M_iYH27t55ETOi2E-S4",
+          "question": "Which country is in the lead on the technology front?",
+          "options": [
+            "The US",
+            "China"
+          ]
+        },
+        {
+          "pollID": "inr-m5u1-critical-thinking-exercise-poll",
+          "sheetID": "13Y64uGX4orr3aiFu1FI70oFbguYGj1GKK-d1cJBNO0Y",
+          "question": "What will most shape global politics in the coming decade?",
+          "options": [
+            "The US-China rivalry",
+            "The actions of other countries",
+            "Climate change",
+            "Pandemics",
+            "Demography"
+          ]
+        },
+        {
+          "pollID": "inr-m5u1-lesson-poll-1",
+          "sheetID": "1FKMO4nj--bfuZkJZbNffI8m3iguvSt_k9e3Mllw2xAA",
+          "question": "Who benefits more from the Sino-Russian relationship?",
+          "options": [
+            "Russia",
+            "China"
+          ]
+        },
+        {
+          "pollID": "inr-m5u1-lesson-poll-2",
+          "sheetID": "1KC-lhiNQltWvHoE794retZK276KRenIvLKGjBLlXJOU",
+          "question": "While tensions between the US and China rise, North Korea will continue to advance its nuclear-weapons programme and threaten its neighbours.",
+          "options": [
+            "I agree",
+            "I’m not sure",
+            "I disagree"
+          ]
+        },
+        {
+          "pollID": "inr-m5u4-assignment-poll",
+          "sheetID": "1VQYuRno5alfjvq3Kfob31Jv7IV5UUw_jU3uDvnUvN3Q",
+          "question": "What will most shape global politics in the coming decade?",
+          "options": [
+            "The US-China rivalry",
+            "The actions of other countries",
+            "Climate change",
+            "Pandemics",
+            "Demography"
+          ]
         }
       ]
     }
