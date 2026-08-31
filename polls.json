@@ -1,5 +1,6 @@
 {
-"scriptUrl": "https://script.google.com/macros/s/AKfycbzpU9dcVui_afkBphquvX0yt8aGE_Nbbchbvrhyv995kgC0Xz_DNGzVHYVcq0dZEDKP/exec",  "courses": [
+  "scriptUrl": "https://script.google.com/macros/s/AKfycbzpU9dcVui_afkBphquvX0yt8aGE_Nbbchbvrhyv995kgC0Xz_DNGzVHYVcq0dZEDKP/exec",
+  "courses": [
     {
       "courseID": "bsw",
       "polls": [
@@ -15,7 +16,7 @@
         {
           "pollID": "bsw-m3u2-notes-poll-2",
           "sheetID": "1RFBec_WyBStTWTAoPyo-OgTZwvxxzVArA451e51cxCM",
-          "question": "When you’re in sudden danger, do you automatically cry “help!” or “aid!”?",
+          "question": "When you're in sudden danger, do you automatically cry \"help!\" or \"aid!\"?",
           "options": [
             "Help!",
             "Aid!"
@@ -70,17 +71,17 @@
           "question": "Does the cold war still matter?",
           "options": [
             "Yes",
-            "I’m not sure",
+            "I'm not sure",
             "No"
           ]
         },
         {
           "pollID": "inr-m1u2-lesson-poll-2",
           "sheetID": "1dLbxK4aJZRV_RYZtbVsM2BnI-g18HkDysDI5UYc1UC0",
-          "question": "Do you agree with Lukin about the West’s abuse of power during the unipolar moment?",
+          "question": "Do you agree with Lukin about the West's abuse of power during the unipolar moment?",
           "options": [
             "Yes",
-            "I’m not sure",
+            "I'm not sure",
             "No"
           ]
         },
@@ -97,10 +98,10 @@
         {
           "pollID": "inr-m2u1-critical-thinking-exercise-poll",
           "sheetID": "1TH2zh3c0gc7O-8IjUtnv6j0ZrruShydk1hB6TU7bH6I",
-          "question": "Do you think it’s advantageous for the world to have one country as a “global leader”?",
+          "question": "Do you think it's advantageous for the world to have one country as a \"global leader\"?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -110,7 +111,7 @@
           "question": "Does the multilateral system greatly benefit the US?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -122,46 +123,46 @@
             "A lot",
             "A little",
             "Not at all",
-            "I don’t know"
+            "I don't know"
           ]
         },
         {
           "pollID": "inr-m2u2-lesson-poll-2",
           "sheetID": "1fxP-KIT_de9qv8zU1NNLhHNyHunKdbat3avFf19wm58",
-          "question": "Will Trump’s second term accelerate the decline of the Pax Americana?",
+          "question": "Will Trump's second term accelerate the decline of the Pax Americana?",
           "options": [
             "Yes",
             "No",
-            "I don’t know"
+            "I don't know"
           ]
         },
         {
           "pollID": "inr-m2u3-assignment-poll",
           "sheetID": "1cy3RLBuVRtoPSmuqbyBs0_HP84H6DY4372uY_mdkqI0",
-          "question": "Do you think it’s advantageous for the world to have one country as a “global leader”?",
+          "question": "Do you think it's advantageous for the world to have one country as a \"global leader\"?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
         {
           "pollID": "inr-m3u1-critical-thinking-exercise-poll",
           "sheetID": "1q0tmE4mGhhrq2ocsz7MKwDsO-G-Jvfs4jJEv8VLEjIM",
-          "question": "Will China replace the US as the world’s dominant power?",
+          "question": "Will China replace the US as the world's dominant power?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
         {
           "pollID": "inr-m3u1-lesson-poll-1",
           "sheetID": "1gIFsT6nPvlP5VaqoiYa49gcV-B3QRE2C74ute3oofjo",
-          "question": "China’s transformation should be seen as a “threat” rather than a “peaceful rise”.",
+          "question": "China's transformation should be seen as a \"threat\" rather than a \"peaceful rise\".",
           "options": [
             "I agree",
-            "I’m not sure",
+            "I'm not sure",
             "I disagree"
           ]
         },
@@ -171,7 +172,7 @@
           "question": "Is China better at dealing with emergencies than the US?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -181,7 +182,7 @@
           "question": "Has China come closer to its goal of being able to deny access by American forces in the western Pacific?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -191,14 +192,14 @@
           "question": "Do you think China is accomplishing what it has set out to do: win over the world?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
         {
           "pollID": "inr-m3u2-lesson-poll-3",
           "sheetID": "1TqkVzrv4cHW4bOU6pAX69KmvRtDkNKcWWoh0mHDxov4",
-          "question": "What is required for China to take the global “centre stage”?",
+          "question": "What is required for China to take the global \"centre stage\"?",
           "options": [
             "China to push the US out of the western Pacific",
             "China to replace the US as the most powerful country",
@@ -208,10 +209,10 @@
         {
           "pollID": "inr-m3u3-assignment-poll",
           "sheetID": "1dwIAr__Xu0rt7xqppIIiopowtzxjlTEJR9rLmebZ-oU",
-          "question": "Will China replace the US as the world’s dominant power?",
+          "question": "Will China replace the US as the world's dominant power?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -230,7 +231,7 @@
           "question": "Will AI be more beneficial than dangerous?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -240,7 +241,7 @@
           "question": "Will the IoT be more beneficial than dangerous?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -250,7 +251,7 @@
           "question": "Do you think privacy with regard to technology should be a constitutional right?",
           "options": [
             "Yes",
-            "I don’t know",
+            "I don't know",
             "No"
           ]
         },
@@ -290,7 +291,7 @@
           "question": "While tensions between the US and China rise, North Korea will continue to advance its nuclear-weapons programme and threaten its neighbours.",
           "options": [
             "I agree",
-            "I’m not sure",
+            "I'm not sure",
             "I disagree"
           ]
         },
