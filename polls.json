@@ -1,9 +1,9 @@
 {
+  "scriptUrl": "https://script.google.com/macros/s/AKfycbydzYJTzAAQr5tM30WqVzvfM1ZvUq5DKB5VifWeSHuoYKgdFxBoCHH22ogBzkLfu2UN/exec",
   "courses": [
     {
       "courseID": "inr",
       "sheetID": "1NdKWvHFaJ__qSawjw_AyZ0tTzArL1ZsJNAiJuPrAI80",
-      "scriptUrl": "https://script.google.com/macros/s/AKfycbxcXb1Okw7yJcgH77Dp1zHjOYGy9l68XqeeG6p-SHerCV_Sw7PezE174uG1E2P9_kqY/exec",
       "polls": [
         {
           "pollID": "poll-001",
@@ -20,7 +20,6 @@
     {
       "courseID": "bsw",
       "sheetID": "1-JbNskmlkAHbZwING5ceU1swJvA650X3h-XgjqSk054",
-      "scriptUrl": "https://script.google.com/macros/s/AKfycbwRFIKFBYCYmtQyFxPYLN33zXqO1DMvKMDRHbPk9q1Nv8OjqXuWUbAnh6e_Pxj2SrSS3g/exec",
       "polls": [
         {
           "pollID": "poll-001",
