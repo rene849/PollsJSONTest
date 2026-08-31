@@ -308,7 +308,7 @@ var POLL       = null;
   // ── polls.json cache ────────────────────────────────────────
   // Cached in localStorage so repeat visits skip the network fetch.
   // Bump POLLS_VERSION whenever polls.json changes to bust the cache.
-  var POLLS_VERSION   = "v1.0";
+  var POLLS_VERSION   = "v1.1";
   var POLLS_CACHE_KEY = "ee-polls-json-" + POLLS_VERSION;
 
   function loadPollsJson() {
@@ -329,6 +329,9 @@ var POLL       = null;
 
   loadPollsJson()
     .then(function(data) {
+      var scriptUrl = data.scriptUrl || null;
+      if (!scriptUrl) throw new Error("No scriptUrl in polls.json");
+
       var course = (data.courses || []).find(function(c) { return c.courseID === courseId; });
       if (!course) throw new Error("Course not found: " + courseId);
       var poll = (course.polls || []).find(function(p) { return p.pollID === pollId; });
@@ -337,8 +340,7 @@ var POLL       = null;
       POLL = { question: poll.question, options: poll.options };
       window.__pollOptionCount = poll.options.length;
 
-      if (!course.scriptUrl) throw new Error("No scriptUrl for course: " + courseId);
-      SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
+      SCRIPT_URL = scriptUrl + "?sheetId=" + encodeURIComponent(course.sheetID);
       initialisePoll();
     })
     .catch(function(err) {
