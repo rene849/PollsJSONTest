@@ -231,6 +231,14 @@
 
   #error-view { display: none; }
 
+  .submit-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+
   @media (max-width: 480px) {
     .poll { padding: 16px; }
     .poll-question { font-size: 16px; }
@@ -248,14 +256,15 @@ var POLL       = null;
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
 
-  <div id="loading-view" aria-hidden="true">
+  <div id="loading-view" aria-hidden="true" aria-label="Poll loading">
     <div id="skel-options"></div>
     <div class="skel skel-submit"></div>
   </div>
 
   <div id="vote-view">
-    <div class="options" id="options-list" role="single-select"></div>
-    <button class="submit-btn" id="submit-btn" disabled onclick="submitVote()">Submit</button>
+    <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
+    <p id="submit-hint" class="submit-hint" aria-live="polite"></p>
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitVote()" aria-describedby="submit-hint">Submit</button>
     <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
   </div>
 
@@ -305,25 +314,14 @@ var POLL       = null;
     document.getElementById("loading-view").style.display = "flex";
   })();
 
-  // ── polls.json cache ────────────────────────────────────────
-  // Cached in localStorage so repeat visits skip the network fetch.
-  // Bump POLLS_VERSION whenever polls.json changes to bust the cache.
-  var POLLS_VERSION   = "v1.2";
-  var POLLS_CACHE_KEY = "ee-polls-json-" + POLLS_VERSION;
-
+  // ── polls.json fetch ─────────────────────────────────────────
+  // Fetched fresh on every load — file is small (~5KB) so no cache needed.
+  // This avoids stale content issues when polls.json is updated.
   function loadPollsJson() {
-    var cached = localStorage.getItem(POLLS_CACHE_KEY);
-    if (cached) {
-      try { return Promise.resolve(JSON.parse(cached)); } catch(e) {}
-    }
-    return fetch("polls.json?" + POLLS_VERSION)
+    return fetch("polls.json")
       .then(function(r) {
         if (!r.ok) throw new Error("Could not load polls.json");
         return r.json();
-      })
-      .then(function(data) {
-        try { localStorage.setItem(POLLS_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
-        return data;
       });
   }
 
@@ -429,6 +427,9 @@ var POLL       = null;
     function buildOptions() {
       var list = document.getElementById("options-list");
       list.innerHTML = "";
+      // Inform screen readers why Submit is initially disabled
+      var hint = document.getElementById("submit-hint");
+      if (hint) hint.textContent = "Please select an option above to enable Submit.";
       POLL.options.forEach(function(opt, i) {
         var btn = document.createElement("button");
         btn.className   = "option-btn";
@@ -442,6 +443,9 @@ var POLL       = null;
             b.setAttribute("aria-pressed", idx === i ? "true" : "false");
           });
           document.getElementById("submit-btn").disabled = false;
+          // Clear hint once an option is selected
+          var hint = document.getElementById("submit-hint");
+          if (hint) hint.textContent = "";
         });
         list.appendChild(btn);
       });
@@ -502,7 +506,7 @@ var POLL       = null;
             (mine ? "\u2713 " : "") + opt +
           '</div>' +
           '<div class="bar-container">' +
-            '<div class="bar-track" aria-label="' + pct + '% of votes">' +
+            '<div class="bar-track" role="img" aria-label="' + opt + ': ' + pct + '% of votes">' +
               '<div class="bar-fill" style="width:0%">' +
                 '<span class="inner-number">' + votes + '</span>' +
               '</div>' +
