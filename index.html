@@ -236,8 +236,6 @@
 
   #error-view { display: none; }
 
-
-
   @media (max-width: 480px) {
     .poll { padding: 16px; }
     .poll-question { font-size: 16px; }
@@ -269,7 +267,7 @@ var POLL       = null;
   <div id="results-view" aria-live="polite">
     <div class="results" id="results-list"></div>
     <div class="footer-text-line">
-      <span id="footer-text">You've already voted.</span>
+      <span id="footer-text">You’ve already voted.</span>
       <span id="total-note"></span>
     </div>
   </div>
@@ -552,7 +550,7 @@ var POLL       = null;
     function setFooter(total) {
       var safeTotal = total || 0;
       var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
-      document.getElementById("footer-text").textContent = "You've already voted.";
+      document.getElementById("footer-text").textContent = "You’ve already voted.";
       document.getElementById("total-note").textContent  = " There are " + count;
     }
 
