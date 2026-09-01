@@ -13,7 +13,7 @@
     --text-muted:   #0d0d0d;
     --bg:           #ffffff;
     --radius:       4px;
-    --font:         system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font:         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
     --focus:        #E3120B;
     --error-bg:     #ffffff;
     --error-text:   #E3120B;
@@ -236,13 +236,7 @@
 
   #error-view { display: none; }
 
-  .submit-hint {
-    font-size: 13px;
-    color: var(--text-muted);
-    text-align: center;
-    margin-top: 8px;
-    min-height: 18px;
-  }
+
 
   @media (max-width: 480px) {
     .poll { padding: 16px; }
@@ -268,8 +262,7 @@ var POLL       = null;
 
   <div id="vote-view">
     <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
-    <p id="submit-hint" class="submit-hint" aria-live="polite"></p>
-    <button class="submit-btn" id="submit-btn" disabled onclick="submitVote()" aria-describedby="submit-hint">Submit</button>
+    <button class="submit-btn" id="submit-btn" onclick="submitVote()">Submit</button>
     <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
   </div>
 
@@ -432,9 +425,6 @@ var POLL       = null;
     function buildOptions() {
       var list = document.getElementById("options-list");
       list.innerHTML = "";
-      // Inform screen readers why Submit is initially disabled
-      var hint = document.getElementById("submit-hint");
-      if (hint) hint.textContent = "Please select an option above to enable Submit.";
       POLL.options.forEach(function(opt, i) {
         var btn = document.createElement("button");
         btn.className   = "option-btn";
@@ -448,16 +438,19 @@ var POLL       = null;
             b.setAttribute("aria-pressed", idx === i ? "true" : "false");
           });
           document.getElementById("submit-btn").disabled = false;
-          // Clear hint once an option is selected
-          var hint = document.getElementById("submit-hint");
-          if (hint) hint.textContent = "";
         });
         list.appendChild(btn);
       });
     }
 
     window.submitVote = function() {
-      if (selected === null || !uidReady) return;
+      if (selected === null) {
+        // Focus first option so keyboard/screen reader users know what to do
+        var firstBtn = document.querySelector(".option-btn");
+        if (firstBtn) firstBtn.focus();
+        return;
+      }
+      if (!uidReady) return;
 
       var chosenOption = POLL.options[selected];
       hasVoted = true;
