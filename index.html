@@ -29,7 +29,6 @@
     overflow: hidden; 
     margin: 0;
     padding: 12px; 
-    min-height: 220px;
   }
 
   .poll {
@@ -44,7 +43,6 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
-    min-height: 200px;
   }
 
   .poll-question {
@@ -225,7 +223,7 @@
   }
 
   .error-banner {
-    padding: 16px;
+    padding: 16px 24px;
     background: var(--error-bg);
     border: 1px solid var(--error-border);
     border-radius: var(--radius);
@@ -234,9 +232,13 @@
     color: var(--error-text);
     line-height: 1.5;
     text-align: center;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   #error-view { display: none; }
+
+
 
   @media (max-width: 480px) {
     .poll { padding: 16px; }
@@ -300,6 +302,8 @@ var POLL       = null;
   }
 
   // ── Show skeleton immediately so iframe is never blank ──────
+  // A generic 3-option shimmer appears while polls.json loads.
+  // Replaced with real options once JSON is fetched.
   (function() {
     var skelList = document.getElementById("skel-options");
     for (var i = 0; i < 3; i++) {
@@ -311,6 +315,8 @@ var POLL       = null;
   })();
 
   // ── polls.json fetch ─────────────────────────────────────────
+  // Fetched fresh on every load — file is small (~5KB) so no cache needed.
+  // This avoids stale content issues when polls.json is updated.
   function loadPollsJson() {
     return fetch("polls.json")
       .then(function(r) {
@@ -332,6 +338,7 @@ var POLL       = null;
       POLL = { question: poll.question, options: poll.options };
       window.__pollOptionCount = poll.options.length;
 
+      // sheetID is now per-poll (not per-course) in polls.json
       var sheetId = poll.sheetID || course.sheetID || null;
       if (!sheetId) throw new Error("No sheetID found for poll: " + pollId);
       SCRIPT_URL = scriptUrl + "?sheetId=" + encodeURIComponent(sheetId);
@@ -343,6 +350,7 @@ var POLL       = null;
     });
 
   function initialisePoll() {
+    // Clear generic skeleton, show real content
     document.getElementById("skel-options").innerHTML = "";
     document.getElementById("loading-view").style.display = "none";
     document.getElementById("poll-question").textContent = POLL.question;
@@ -361,11 +369,6 @@ var POLL       = null;
       show("vote-view");
     }
 
-    // ── Ask parent window (Moodle) for User ID ────────────────
-    if (window.parent) {
-      window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
-    }
-
     var urlUid = urlParams.get("uid");
     if (urlUid) {
       uid = urlUid;
@@ -375,18 +378,21 @@ var POLL       = null;
       window.addEventListener("message", function(event) {
         if (!event.data || event.data.type !== "moodleUserId") return;
         if (uidReady) return;
-        uid = String(event.data.userId);
+        // If userId is null/0/undefined (act as student, guest) treat as anonymous
+        uid = (event.data.userId && event.data.userId !== "0")
+          ? String(event.data.userId)
+          : "anonymous";
         uidReady = true;
         checkVoteStatus();
       });
 
-      // Immediate fallback if Moodle postMessage is blocked/restricted
+      // Fallback if no postMessage received within 1.5s (e.g. non-Moodle context)
       setTimeout(function() {
         if (uidReady) return;
         uid = "anonymous";
         uidReady = true;
         checkVoteStatus();
-      }, 1000);
+      }, 1500);
     }
 
     function checkVoteStatus() {
@@ -409,10 +415,7 @@ var POLL       = null;
           show("vote-view");
         }
       })
-      .catch(function() {
-        // Guarantee frame renders even on API fetch errors
-        if (window.__triggerFrameHeight) window.__triggerFrameHeight();
-      });
+      .catch(function() {});
     }
 
     function buildSkeleton() {
@@ -448,6 +451,7 @@ var POLL       = null;
 
     window.submitVote = function() {
       if (selected === null) {
+        // Focus first option so keyboard/screen reader users know what to do
         var firstBtn = document.querySelector(".option-btn");
         if (firstBtn) firstBtn.focus();
         return;
@@ -553,10 +557,9 @@ var POLL       = null;
 
     function setFooter(total) {
       var safeTotal = total || 0;
-      var verb = safeTotal === 1 ? "is" : "are";
       var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
       document.getElementById("footer-text").textContent = "You’ve already voted.";
-      document.getElementById("total-note").textContent  = " There " + verb + " " + count;
+      document.getElementById("total-note").textContent  = " There are " + count;
     }
 
     function show(id) { document.getElementById(id).style.display = "flex"; }
@@ -571,6 +574,7 @@ var POLL       = null;
     }
   }
 
+  // Top-level showError for pre-init errors (missing URL params)
   function showError(msg) {
     document.getElementById("loading-view").style.display = "none";
     document.getElementById("vote-view").style.display    = "none";
@@ -607,7 +611,7 @@ var POLL       = null;
   function sendHeight() {
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
-    var currentHeight = Math.max(220, Math.ceil(pollCard.getBoundingClientRect().height) + 36);
+    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 36;
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
