@@ -29,6 +29,7 @@
     overflow: hidden; 
     margin: 0;
     padding: 12px; 
+    min-height: 220px;
   }
 
   .poll {
@@ -43,6 +44,7 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    min-height: 200px;
   }
 
   .poll-question {
@@ -359,7 +361,7 @@ var POLL       = null;
       show("vote-view");
     }
 
-    // ── Request User ID from parent window (Moodle) ───────────
+    // ── Ask parent window (Moodle) for User ID ────────────────
     if (window.parent) {
       window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
     }
@@ -378,13 +380,13 @@ var POLL       = null;
         checkVoteStatus();
       });
 
-      // Safety fallback: Proceed if Moodle fails to send ID (e.g., during "Log in as")
+      // Immediate fallback if Moodle postMessage is blocked/restricted
       setTimeout(function() {
         if (uidReady) return;
-        uid = "impersonated_or_anonymous";
+        uid = "anonymous";
         uidReady = true;
         checkVoteStatus();
-      }, 2500);
+      }, 1000);
     }
 
     function checkVoteStatus() {
@@ -407,7 +409,10 @@ var POLL       = null;
           show("vote-view");
         }
       })
-      .catch(function() {});
+      .catch(function() {
+        // Guarantee frame renders even on API fetch errors
+        if (window.__triggerFrameHeight) window.__triggerFrameHeight();
+      });
     }
 
     function buildSkeleton() {
@@ -602,7 +607,7 @@ var POLL       = null;
   function sendHeight() {
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
-    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 36;
+    var currentHeight = Math.max(220, Math.ceil(pollCard.getBoundingClientRect().height) + 36);
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
