@@ -306,6 +306,36 @@
             "Pandemics",
             "Demography"
           ]
+        },
+        {
+          "pollID": "inr-m6u1-critical-thinking-excercise-poll",
+          "sheetID": "1mPfx9inYngszLoOBkikLniyAT6wlz_TuN7UtGvYW1w4",
+          "question": "Globalisation holds more advantages for the world than disadvantages.",
+          "options": [
+            "I agree",
+            "I’m not sure",
+            "I disagree"
+          ]
+        },
+        {
+          "pollID": "inr-m6u2-lesson-poll",
+          "sheetID": "1Y1qRbgCvZKu3BedLkc77HIlXkWtw9quHHap8XSY6JGg",
+          "question": "Which risk are you most concerned about?",
+          "options": [
+            "More financial crises",
+            "Poor countries being left behind",
+            "A Chinese-dominated Asia"
+          ]
+        },
+        {
+          "pollID": "inr-m6u3-assignment-poll",
+          "sheetID": "1b9MTmuQqBhSBbzZ1QUVUHwvNfjgEtcyeMZzydTBsrls",
+          "question": "Globalisation holds more advantages for the world than disadvantages.",
+          "options": [
+            "I agree",
+            "I’m not sure",
+            "I disagree"
+          ]
         }
       ]
     }
