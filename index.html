@@ -359,7 +359,7 @@ var POLL       = null;
       show("vote-view");
     }
 
-    // ── Ask parent window (Moodle) for User ID ────────────────
+    // ── Request User ID from parent window (Moodle) ───────────
     if (window.parent) {
       window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
     }
@@ -378,10 +378,10 @@ var POLL       = null;
         checkVoteStatus();
       });
 
-      // Fallback timeout if Moodle script does not respond
+      // Safety fallback: Proceed if Moodle fails to send ID (e.g., during "Log in as")
       setTimeout(function() {
         if (uidReady) return;
-        uid = "anonymous";
+        uid = "impersonated_or_anonymous";
         uidReady = true;
         checkVoteStatus();
       }, 2500);
