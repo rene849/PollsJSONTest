@@ -547,12 +547,13 @@ var POLL       = null;
       });
     }
 
-    function setFooter(total) {
-      var safeTotal = total || 0;
-      var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
-      document.getElementById("footer-text").textContent = "You’ve already voted.";
-      document.getElementById("total-note").textContent  = " There are " + count;
-    }
+  function setFooter(total) {
+  var safeTotal = total || 0;
+  var verb = safeTotal === 1 ? "is" : "are";
+  var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
+  document.getElementById("footer-text").textContent = "You’ve already voted.";
+  document.getElementById("total-note").textContent  = " There " + verb + " " + count;
+}
 
     function show(id) { document.getElementById(id).style.display = "flex"; }
     function hide(id) { document.getElementById(id).style.display = "none"; }
