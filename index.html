@@ -189,7 +189,7 @@
 
   .footer-text-line {
     margin-top: 16px;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-muted);
     text-align: center;
     min-height: 44px;
@@ -227,7 +227,7 @@
     background: var(--error-bg);
     border: 1px solid var(--error-border);
     border-radius: var(--radius);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     color: var(--error-text);
     line-height: 1.5;
@@ -301,9 +301,7 @@ var POLL       = null;
     return;
   }
 
-  // ── Show skeleton immediately so iframe is never blank ──────
-  // A generic 3-option shimmer appears while polls.json loads.
-  // Replaced with real options once JSON is fetched.
+  // ── Show skeleton immediately ────────────────────────────────
   (function() {
     var skelList = document.getElementById("skel-options");
     for (var i = 0; i < 3; i++) {
@@ -314,19 +312,33 @@ var POLL       = null;
     document.getElementById("loading-view").style.display = "flex";
   })();
 
-  // ── polls.json fetch ─────────────────────────────────────────
-  // Fetched fresh on every load — file is small (~5KB) so no cache needed.
-  // This avoids stale content issues when polls.json is updated.
-  function loadPollsJson() {
-    return fetch("polls.json")
-      .then(function(r) {
-        if (!r.ok) throw new Error("Could not load polls.json");
-        return r.json();
-      });
-  }
+  // ── Parallel fetch: polls.json + Moodle userId together ──────
+  // Both fire simultaneously — by the time polls.json resolves,
+  // userId is often already available, saving a full round trip.
+  var uidPromise = new Promise(function(resolve) {
+    window.addEventListener("message", function(event) {
+      if (!event.data || event.data.type !== "moodleUserId") return;
+      var userId = (event.data.userId && event.data.userId !== "0")
+        ? String(event.data.userId)
+        : "anonymous";
+      resolve(userId);
+    });
+    // Fallback if no postMessage received within 1.5s
+    setTimeout(function() { resolve("anonymous"); }, 1500);
+  });
 
-  loadPollsJson()
-    .then(function(data) {
+  var jsonPromise = fetch("polls.json")
+    .then(function(r) {
+      if (!r.ok) throw new Error("Could not load polls.json");
+      return r.json();
+    });
+
+  Promise.all([jsonPromise, uidPromise])
+    .then(function(resolved) {
+      var data = resolved[0];
+      uid      = resolved[1];
+      uidReady = true;
+
       var scriptUrl = data.scriptUrl || null;
       if (!scriptUrl) throw new Error("No scriptUrl in polls.json");
 
@@ -338,7 +350,6 @@ var POLL       = null;
       POLL = { question: poll.question, options: poll.options };
       window.__pollOptionCount = poll.options.length;
 
-      // sheetID is now per-poll (not per-course) in polls.json
       var sheetId = poll.sheetID || course.sheetID || null;
       if (!sheetId) throw new Error("No sheetID found for poll: " + pollId);
       SCRIPT_URL = scriptUrl + "?sheetId=" + encodeURIComponent(sheetId);
@@ -357,43 +368,20 @@ var POLL       = null;
     buildSkeleton();
     buildOptions();
 
+    // Don't show cached results — go straight to skeleton while
+    // checkVoteStatus fetches real counts from the sheet.
+    // This prevents the "1 response" flash before real data loads.
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
     if (cachedAnswer) {
       hasVoted = true;
-      var initialCounts = {};
-      POLL.options.forEach(function(opt) {
-        initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
-      });
-      renderResults(initialCounts, 1, false, cachedAnswer);
+      show("loading-view");
     } else {
       show("vote-view");
     }
 
-    var urlUid = urlParams.get("uid");
-    if (urlUid) {
-      uid = urlUid;
-      uidReady = true;
-      checkVoteStatus();
-    } else {
-      window.addEventListener("message", function(event) {
-        if (!event.data || event.data.type !== "moodleUserId") return;
-        if (uidReady) return;
-        // If userId is null/0/undefined (act as student, guest) treat as anonymous
-        uid = (event.data.userId && event.data.userId !== "0")
-          ? String(event.data.userId)
-          : "anonymous";
-        uidReady = true;
-        checkVoteStatus();
-      });
-
-      // Fallback if no postMessage received within 1.5s (e.g. non-Moodle context)
-      setTimeout(function() {
-        if (uidReady) return;
-        uid = "anonymous";
-        uidReady = true;
-        checkVoteStatus();
-      }, 1500);
-    }
+    // uid and uidReady are already set by the parallel Promise.all above.
+    // Kick off vote status check immediately.
+    checkVoteStatus();
 
     function checkVoteStatus() {
       fetch(SCRIPT_URL, {
@@ -408,6 +396,7 @@ var POLL       = null;
         }
         if (data.voted) {
           renderResults(data.counts, data.total, false, data.answer);
+          startPostVoteBurst();
         } else if (hasVoted && !data.voted) {
           if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
           hasVoted = false;
@@ -417,6 +406,53 @@ var POLL       = null;
       })
       .catch(function() {});
     }
+
+    // ── Live results refresh ──────────────────────────────────
+    // Refreshes results every 10 seconds while tab is visible.
+    // Pauses when tab is hidden, resumes immediately on return.
+    // Only runs after the user has voted.
+    var refreshActive = false;
+
+    function fetchLatestResults(onComplete) {
+      if (refreshActive) return;
+      refreshActive = true;
+      fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify({ action: "results", intakeId: intakeId, pollId: pollId, uid: uid })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.ok && data.counts) {
+          updateBars(data.counts, data.total);
+          setFooter(data.total);
+        }
+      })
+      .catch(function() {})
+      .finally(function() {
+        refreshActive = false;
+        if (onComplete) onComplete();
+      });
+    }
+
+    // ── Post-vote burst refresh ───────────────────────────────
+    // After voting, fetch real results at 3s, 8s, 15s, 30s.
+    // This catches other users who voted around the same time
+    // without continuous polling. After 30s results are stable.
+    function startPostVoteBurst() {
+      var delays = [3000, 8000, 15000, 30000];
+      delays.forEach(function(delay) {
+        setTimeout(function() {
+          if (hasVoted) fetchLatestResults();
+        }, delay);
+      });
+    }
+
+    // Refresh when learner returns to the tab after being away
+    document.addEventListener("visibilitychange", function() {
+      if (!document.hidden && hasVoted) {
+        fetchLatestResults();
+      }
+    });
 
     function buildSkeleton() {
       var skelList = document.getElementById("skel-options");
@@ -491,6 +527,8 @@ var POLL       = null;
         }
       })
       .catch(function() {});
+      // Start burst refresh so user sees other votes coming in
+      startPostVoteBurst();
     };
 
     function renderResults(counts, total, justVoted, myAnswer) {
