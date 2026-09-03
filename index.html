@@ -43,6 +43,12 @@
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    opacity: 0;
+    transition: opacity 0.15s ease-in;
+  }
+
+  .poll.is-ready {
+    opacity: 1;
   }
 
   .poll-question {
@@ -333,6 +339,9 @@ var POLL       = null;
       show("vote-view");
     }
 
+    // Reveal the main poll box smoothly once question and options are both rendered
+    document.querySelector(".poll").classList.add("is-ready");
+
     checkVoteStatus();
 
     function checkVoteStatus() {
@@ -498,6 +507,7 @@ var POLL       = null;
       hide("vote-view");
       document.getElementById("error-msg").textContent = msg;
       show("error-view");
+      document.querySelector(".poll").classList.add("is-ready");
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
     }
   }
@@ -506,6 +516,7 @@ var POLL       = null;
     document.getElementById("vote-view").style.display  = "none";
     document.getElementById("error-msg").textContent  = msg;
     document.getElementById("error-view").style.display = "flex";
+    document.querySelector(".poll").classList.add("is-ready");
   }
 
 })();
