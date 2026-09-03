@@ -31,7 +31,6 @@
     padding: 12px; 
   }
 
-  /* Keep entire card invisible until content is 100% built */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -250,7 +249,7 @@ var POLL       = null;
 
   <div id="vote-view">
     <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
-    <button class="submit-btn" id="submit-btn" onclick="submitVote()">Submit</button>
+    <button class="submit-btn" id="submit-btn" onclick="submitVote()" disabled>Submit</button>
     <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
   </div>
 
@@ -287,15 +286,39 @@ var POLL       = null;
     return;
   }
 
+  // Request Moodle User ID immediately from parent frame
+  if (window.parent) {
+    window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
+  }
+
+  // Always listen for Moodle User ID messages and update uid dynamically
+  window.addEventListener("message", function(event) {
+    if (!event.data || event.data.type !== "moodleUserId") return;
+    if (event.data.userId && event.data.userId !== "0") {
+      uid = String(event.data.userId);
+      uidReady = true;
+      // Re-check vote status if initial load ran with anonymous fallback
+      if (typeof checkVoteStatus === "function") checkVoteStatus();
+    }
+  });
+
   var uidPromise = new Promise(function(resolve) {
-    window.addEventListener("message", function(event) {
-      if (!event.data || event.data.type !== "moodleUserId") return;
-      var userId = (event.data.userId && event.data.userId !== "0")
-        ? String(event.data.userId)
-        : "anonymous";
-      resolve(userId);
-    });
-    setTimeout(function() { resolve("anonymous"); }, 1500);
+    var checkInterval = setInterval(function() {
+      if (uid) {
+        clearInterval(checkInterval);
+        resolve(uid);
+      }
+    }, 50);
+
+    // Timeout fallback after 2.5s if no Moodle ID received
+    setTimeout(function() {
+      clearInterval(checkInterval);
+      if (!uid) {
+        uid = "anonymous";
+        uidReady = true;
+        resolve("anonymous");
+      }
+    }, 2500);
   });
 
   var jsonPromise = fetch("polls.json")
@@ -333,8 +356,6 @@ var POLL       = null;
 
   function initialisePoll() {
     document.getElementById("poll-question").textContent = POLL.question;
-    
-    // Build options DOM nodes first
     buildOptions();
 
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
