@@ -31,6 +31,7 @@
     padding: 12px; 
   }
 
+  /* Keep entire card invisible until content is 100% built */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -44,11 +45,13 @@
     flex-direction: column;
     box-sizing: border-box;
     opacity: 0;
+    visibility: hidden;
     transition: opacity 0.15s ease-in;
   }
 
   .poll.is-ready {
     opacity: 1;
+    visibility: visible;
   }
 
   .poll-question {
@@ -330,6 +333,8 @@ var POLL       = null;
 
   function initialisePoll() {
     document.getElementById("poll-question").textContent = POLL.question;
+    
+    // Build options DOM nodes first
     buildOptions();
 
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
@@ -342,10 +347,8 @@ var POLL       = null;
       renderResults(initialCounts, 1, false, cachedAnswer);
     } else {
       show("vote-view");
+      revealPoll();
     }
-
-    // Reveal main poll box only after a view (vote-view or results-view) has been explicitly displayed
-    revealPoll();
 
     checkVoteStatus();
 
@@ -469,6 +472,7 @@ var POLL       = null;
       setFooter(safeTotal);
       hide("vote-view");
       show("results-view");
+      revealPoll();
 
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
 
@@ -512,7 +516,9 @@ var POLL       = null;
     function hide(id) { document.getElementById(id).style.display = "none"; }
 
     function revealPoll() {
-      document.querySelector(".poll").classList.add("is-ready");
+      requestAnimationFrame(function() {
+        document.querySelector(".poll").classList.add("is-ready");
+      });
     }
 
     function showError(msg) {
