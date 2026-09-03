@@ -206,22 +206,6 @@
     line-height: 1.4;
   }
 
-  .skel {
-    border-radius: var(--radius);
-    background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.2s infinite;
-  }
-
-  .skel-option { height: 60px; margin-bottom: 12px; }
-  .skel-option:last-child { margin-bottom: 0; }
-  .skel-submit { height: 44px; margin-top: 16px; }
-
-  @keyframes shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
-  }
-
   .error-banner {
     padding: 16px 24px;
     background: var(--error-bg);
@@ -237,8 +221,6 @@
   }
 
   #error-view { display: none; }
-
-
 
   @media (max-width: 480px) {
     .poll { padding: 16px; }
@@ -256,11 +238,6 @@ var POLL       = null;
 
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
-
-  <div id="loading-view" aria-hidden="true" aria-label="Poll loading">
-    <div id="skel-options"></div>
-    <div class="skel skel-submit"></div>
-  </div>
 
   <div id="vote-view">
     <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
@@ -301,20 +278,6 @@ var POLL       = null;
     return;
   }
 
-  // ── Show skeleton immediately ────────────────────────────────
-  (function() {
-    var skelList = document.getElementById("skel-options");
-    for (var i = 0; i < 3; i++) {
-      var s = document.createElement("div");
-      s.className = "skel skel-option";
-      skelList.appendChild(s);
-    }
-    document.getElementById("loading-view").style.display = "flex";
-  })();
-
-  // ── Parallel fetch: polls.json + Moodle userId together ──────
-  // Both fire simultaneously — by the time polls.json resolves,
-  // userId is often already available, saving a full round trip.
   var uidPromise = new Promise(function(resolve) {
     window.addEventListener("message", function(event) {
       if (!event.data || event.data.type !== "moodleUserId") return;
@@ -323,7 +286,6 @@ var POLL       = null;
         : "anonymous";
       resolve(userId);
     });
-    // Fallback if no postMessage received within 1.5s
     setTimeout(function() { resolve("anonymous"); }, 1500);
   });
 
@@ -361,26 +323,16 @@ var POLL       = null;
     });
 
   function initialisePoll() {
-    // Clear generic skeleton, show real content
-    document.getElementById("skel-options").innerHTML = "";
-    document.getElementById("loading-view").style.display = "none";
     document.getElementById("poll-question").textContent = POLL.question;
-    buildSkeleton();
     buildOptions();
 
-    // Don't show cached results — go straight to skeleton while
-    // checkVoteStatus fetches real counts from the sheet.
-    // This prevents the "1 response" flash before real data loads.
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
     if (cachedAnswer) {
       hasVoted = true;
-      show("loading-view");
     } else {
       show("vote-view");
     }
 
-    // uid and uidReady are already set by the parallel Promise.all above.
-    // Kick off vote status check immediately.
     checkVoteStatus();
 
     function checkVoteStatus() {
@@ -396,7 +348,6 @@ var POLL       = null;
         }
         if (data.voted) {
           renderResults(data.counts, data.total, false, data.answer);
-          startPostVoteBurst();
         } else if (hasVoted && !data.voted) {
           if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
           hasVoted = false;
@@ -405,63 +356,6 @@ var POLL       = null;
         }
       })
       .catch(function() {});
-    }
-
-    // ── Live results refresh ──────────────────────────────────
-    // Refreshes results every 10 seconds while tab is visible.
-    // Pauses when tab is hidden, resumes immediately on return.
-    // Only runs after the user has voted.
-    var refreshActive = false;
-
-    function fetchLatestResults(onComplete) {
-      if (refreshActive) return;
-      refreshActive = true;
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "results", intakeId: intakeId, pollId: pollId, uid: uid })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.counts) {
-          updateBars(data.counts, data.total);
-          setFooter(data.total);
-        }
-      })
-      .catch(function() {})
-      .finally(function() {
-        refreshActive = false;
-        if (onComplete) onComplete();
-      });
-    }
-
-    // ── Post-vote burst refresh ───────────────────────────────
-    // After voting, fetch real results at 3s, 8s, 15s, 30s.
-    // This catches other users who voted around the same time
-    // without continuous polling. After 30s results are stable.
-    function startPostVoteBurst() {
-      var delays = [3000, 8000, 15000, 30000];
-      delays.forEach(function(delay) {
-        setTimeout(function() {
-          if (hasVoted) fetchLatestResults();
-        }, delay);
-      });
-    }
-
-    // Refresh when learner returns to the tab after being away
-    document.addEventListener("visibilitychange", function() {
-      if (!document.hidden && hasVoted) {
-        fetchLatestResults();
-      }
-    });
-
-    function buildSkeleton() {
-      var skelList = document.getElementById("skel-options");
-      skelList.innerHTML = "";
-      POLL.options.forEach(function() {
-        var s = document.createElement("div");
-        s.className = "skel skel-option";
-        skelList.appendChild(s);
-      });
     }
 
     function buildOptions() {
@@ -487,7 +381,6 @@ var POLL       = null;
 
     window.submitVote = function() {
       if (selected === null) {
-        // Focus first option so keyboard/screen reader users know what to do
         var firstBtn = document.querySelector(".option-btn");
         if (firstBtn) firstBtn.focus();
         return;
@@ -527,8 +420,6 @@ var POLL       = null;
         }
       })
       .catch(function() {});
-      // Start burst refresh so user sees other votes coming in
-      startPostVoteBurst();
     };
 
     function renderResults(counts, total, justVoted, myAnswer) {
@@ -559,7 +450,6 @@ var POLL       = null;
       });
 
       setFooter(safeTotal);
-      hide("loading-view");
       hide("vote-view");
       show("results-view");
 
@@ -595,16 +485,16 @@ var POLL       = null;
 
     function setFooter(total) {
       var safeTotal = total || 0;
+      var verb = safeTotal === 1 ? "is" : "are";
       var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
       document.getElementById("footer-text").textContent = "You’ve already voted.";
-      document.getElementById("total-note").textContent  = " There are " + count;
+      document.getElementById("total-note").textContent  = " There " + verb + " " + count;
     }
 
     function show(id) { document.getElementById(id).style.display = "flex"; }
     function hide(id) { document.getElementById(id).style.display = "none"; }
 
     function showError(msg) {
-      hide("loading-view");
       hide("vote-view");
       document.getElementById("error-msg").textContent = msg;
       show("error-view");
@@ -612,12 +502,10 @@ var POLL       = null;
     }
   }
 
-  // Top-level showError for pre-init errors (missing URL params)
   function showError(msg) {
-    document.getElementById("loading-view").style.display = "none";
-    document.getElementById("vote-view").style.display    = "none";
-    document.getElementById("error-msg").textContent = msg;
-    document.getElementById("error-view").style.display   = "flex";
+    document.getElementById("vote-view").style.display  = "none";
+    document.getElementById("error-msg").textContent  = msg;
+    document.getElementById("error-view").style.display = "flex";
   }
 
 })();
