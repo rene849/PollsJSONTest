@@ -335,12 +335,17 @@ var POLL       = null;
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
     if (cachedAnswer) {
       hasVoted = true;
+      var initialCounts = {};
+      POLL.options.forEach(function(opt) {
+        initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
+      });
+      renderResults(initialCounts, 1, false, cachedAnswer);
     } else {
       show("vote-view");
     }
 
-    // Reveal the main poll box smoothly once question and options are both rendered
-    document.querySelector(".poll").classList.add("is-ready");
+    // Reveal main poll box only after a view (vote-view or results-view) has been explicitly displayed
+    revealPoll();
 
     checkVoteStatus();
 
@@ -363,8 +368,11 @@ var POLL       = null;
           hide("results-view");
           show("vote-view");
         }
+        revealPoll();
       })
-      .catch(function() {});
+      .catch(function() {
+        revealPoll();
+      });
     }
 
     function buildOptions() {
@@ -503,11 +511,15 @@ var POLL       = null;
     function show(id) { document.getElementById(id).style.display = "flex"; }
     function hide(id) { document.getElementById(id).style.display = "none"; }
 
+    function revealPoll() {
+      document.querySelector(".poll").classList.add("is-ready");
+    }
+
     function showError(msg) {
       hide("vote-view");
       document.getElementById("error-msg").textContent = msg;
       show("error-view");
-      document.querySelector(".poll").classList.add("is-ready");
+      revealPoll();
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
     }
   }
