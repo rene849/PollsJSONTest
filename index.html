@@ -274,8 +274,10 @@ var POLL       = null;
   var intakeId  = urlParams.get("intake")   || null;
   var courseId  = urlParams.get("courseID") || null;
   var pollId    = urlParams.get("pollID")   || null;
-  var uid       = null;
-  var uidReady  = false;
+  var paramUid  = urlParams.get("uid")      || null;
+
+  var uid       = paramUid || "anonymous";
+  var uidReady  = !!paramUid;
   var hasVoted  = false;
   var selected  = null;
 
@@ -293,47 +295,28 @@ var POLL       = null;
     window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
   }
 
-  // Poll: Continuous listener for Moodle User ID postMessage calls
+  // Poll: Dynamic listener for Moodle User ID postMessage
   window.addEventListener("message", function(event) {
     if (!event.data || event.data.type !== "moodleUserId") return;
-    if (event.data.userId && event.data.userId !== "0") {
-      uid = String(event.data.userId);
-      uidReady = true;
-      if (typeof checkVoteStatus === "function") checkVoteStatus();
+    if (event.data.userId && String(event.data.userId) !== "0") {
+      var newUid = String(event.data.userId);
+      if (uid !== newUid) {
+        uid = newUid;
+        uidReady = true;
+        if (typeof checkVoteStatus === "function" && SCRIPT_URL) {
+          checkVoteStatus();
+        }
+      }
     }
   });
 
-  var uidPromise = new Promise(function(resolve) {
-    var checkInterval = setInterval(function() {
-      if (uid) {
-        clearInterval(checkInterval);
-        resolve(uid);
-      }
-    }, 50);
-
-    // Poll: Timeout fallback after 2.5s if no Moodle ID is received
-    setTimeout(function() {
-      clearInterval(checkInterval);
-      if (!uid) {
-        uid = "anonymous";
-        uidReady = true;
-        resolve("anonymous");
-      }
-    }, 2500);
-  });
-
-  var jsonPromise = fetch("polls.json")
+  // Poll: Fetch polls.json and render UI immediately without waiting on Moodle ID handshake
+  fetch("polls.json")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
       return r.json();
-    });
-
-  Promise.all([jsonPromise, uidPromise])
-    .then(function(resolved) {
-      var data = resolved[0];
-      uid      = resolved[1];
-      uidReady = true;
-
+    })
+    .then(function(data) {
       var scriptUrl = data.scriptUrl || null;
       if (!scriptUrl) throw new Error("No scriptUrl in polls.json");
 
@@ -348,6 +331,7 @@ var POLL       = null;
       var sheetId = poll.sheetID || course.sheetID || null;
       if (!sheetId) throw new Error("No sheetID found for poll: " + pollId);
       SCRIPT_URL = scriptUrl + "?sheetId=" + encodeURIComponent(sheetId);
+
       initialisePoll();
     })
     .catch(function(err) {
@@ -400,7 +384,6 @@ var POLL       = null;
       });
     }
 
-    // Poll: Helper to request updated class totals directly
     function fetchLatestResults() {
       fetch(SCRIPT_URL, {
         method: "POST",
@@ -437,14 +420,12 @@ var POLL       = null;
       });
     }
 
-    // Poll: Robust vote handler with automatic recovery for stickiness
     window.submitVote = function() {
       if (selected === null) {
         var firstBtn = document.querySelector(".option-btn");
         if (firstBtn) firstBtn.focus();
         return;
       }
-      if (!uidReady) return;
 
       var chosenOption = POLL.options[selected];
       hasVoted = true;
@@ -454,7 +435,6 @@ var POLL       = null;
       document.getElementById("submit-btn").disabled = true;
       document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
 
-      // Poll: Immediate local optimistic render
       var optimisticCounts = {};
       POLL.options.forEach(function(opt) {
         optimisticCounts[opt] = (opt === chosenOption) ? 1 : 0;
@@ -462,7 +442,6 @@ var POLL       = null;
 
       renderResults(optimisticCounts, 1, true, chosenOption);
 
-      // Poll: Background vote submission to Google Apps Script
       fetch(SCRIPT_URL, {
         method: "POST",
         body: JSON.stringify({
@@ -479,13 +458,11 @@ var POLL       = null;
           updateBars(data.counts, data.total);
           setFooter(data.total);
         } else {
-          // Poll: Auto-fetch real counts if initial response payload didn't return full counts
           fetchLatestResults();
         }
       })
       .catch(function(err) {
         console.error("Poll submission error:", err);
-        // Poll: Retry fetching live results on network failure
         setTimeout(fetchLatestResults, 1000);
       });
     };
