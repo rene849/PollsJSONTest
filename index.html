@@ -6,31 +6,38 @@
 <title>Poll</title>
 
 <style>
+  /* ── Design tokens ─────────────────────────────────────────────
+     Change these variables to restyle the entire poll.
+     --brand        : bar fill colour and button background
+     --bar-bg       : empty bar track background
+     --text         : primary text colour
+     --text-muted   : secondary/hint text — set to #0D0D0D for AAA compliance
+     --focus        : keyboard focus ring colour — matches Moodle
+     --error-bg     : error banner background
+     --error-text   : error banner text and border colour — #E3120B preserved
+     ──────────────────────────────────────────────────────────── */
   :root {
-    --brand:        #2E45B8;
-    --bar-bg:       #ebedfa;
-    --text:         #0d0d0d;
-    --text-muted:   #0d0d0d;
-    --bg:           #ffffff;
-    --radius:       4px;
-    --font:         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-    --focus:        #E3120B;
-    --error-bg:     #ffffff;
-    --error-text:   #E3120B;
-    --error-border: #E3120B;
+    --brand:      #2E45B8;   /* Economist Chicago 45 */
+    --bar-bg:     #ebedfa;   /* Economist Chicago 95 */
+    --text:       #0d0d0d;
+    --text-muted: #0d0d0d;   /* Set to brand dark color to guarantee AAA compliance */
+    --bg:         #ffffff;
+    --radius:     4px;
+    --font:         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    --focus:      #E3120B;   /* matches Moodle keyboard focus colour */
+    --error-bg:   #ffffff;   /* white for accessibility — avoids low contrast */
+    --error-text: #E3120B;   /* brand red text preserved */
+    --error-border: #E3120B; /* brand red border preserved */
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  
-  html, body { 
-    font-family: var(--font); 
-    background: transparent; 
-    color: var(--text); 
-    overflow: hidden; 
-    margin: 0;
-    padding: 12px; 
-  }
+  html, body { font-family: var(--font); background: transparent; color: var(--text); overflow-x: hidden; }
+  body { padding: 16px; }
 
+  /* ── Poll card ─────────────────────────────────────────────────
+     Outer wrapper. min-height prevents the card collapsing while
+     the skeleton loads. Keep in sync with iframe height guide above.
+     ──────────────────────────────────────────────────────────── */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -40,11 +47,12 @@
     background: var(--bg);
     box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     padding: 24px;
+    /* min-height removed — card grows with content */
     display: flex;
     flex-direction: column;
-    box-sizing: border-box;
   }
 
+  /* ── Question text ─────────────────────────────────────────── */
   .poll-question {
     font-size: 18px;
     font-weight: 600;
@@ -53,21 +61,33 @@
     margin-bottom: 20px;
   }
 
+  /* ── View switching ────────────────────────────────────────────
+     All views hidden by default. JS calls show()/hide() to switch.
+     vote-view is shown immediately on load — no skeleton wait.
+     ──────────────────────────────────────────────────────────── */
   #loading-view, #vote-view, #results-view {
     display: none;
     flex-direction: column;
+    flex-grow: 1;
   }
 
   .options, .results {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
+  /* ── Option buttons ────────────────────────────────────────────
+     Fixed height (50px) — must match .result-row height so the
+     layout doesn't shift when switching from vote to results view.
+
+     focus-visible uses --focus ring to match Moodle's keyboard
+     navigation style. outline-offset keeps ring outside the border.
+     ──────────────────────────────────────────────────────────── */
   .option-btn {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     border: 1px solid #ddd;
     border-radius: var(--radius);
     background: var(--bg);
@@ -75,20 +95,23 @@
     font-size: 15px;
     color: var(--text);
     width: 100%;
-    transition: background 0.15s, border-color 0.15s;
+    transition: 0.15s;
     font-family: var(--font);
-    height: 60px;
-    text-align: left;
-    line-height: 1.35;
+    height: 50px;              /* keep in sync with .result-row height */
   }
 
   .option-btn:hover { background: #f9f9f9; border-color: var(--brand); }
   .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Keyboard focus ring — increased by 2px (from 3px to 5px) to align with Moodle */
   .option-btn:focus-visible {
     outline: 5px solid var(--focus);
     outline-offset: 1px;
   }
 
+  /* ── Submit button ─────────────────────────────────────────────
+     Fixed height (44px) — must match .footer-text-line height.
+     ──────────────────────────────────────────────────────────── */
   .submit-btn {
     margin-top: 16px;
     width: 100%;
@@ -102,29 +125,34 @@
     font-family: var(--font);
     font-size: 15px;
     transition: opacity 0.2s, background 0.15s;
-    height: 44px;
+    height: 44px;              /* keep in sync with .footer-text-line height */
   }
 
   .submit-btn:hover    { background: #1a2a6e; }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Keyboard focus ring on submit button — increased by 2px (from 3px to 5px) */
   .submit-btn:focus-visible {
     outline: 5px solid var(--focus);
     outline-offset: 1px;
   }
 
+  /* ── Result rows ───────────────────────────────────────────────
+     Fixed height (74px) matching option-btn + label + bar.
+     IMPORTANT: if you change padding or font sizes, re-measure
+     total height and update the iframe height guide in the header.
+     ──────────────────────────────────────────────────────────── */
   .result-row {
     border: 1px solid #e0e0e0;
-    padding: 8px 14px;
+    padding: 10px 14px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
     border-radius: var(--radius);
-    min-height: 60px;
-    height: auto;
+    height: 74px;              /* result-label (~20px) + gap (8px) + bar (20px) + padding (26px) */
   }
 
   .result-label {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     padding-bottom: 4px;
     color: var(--text);
@@ -134,6 +162,7 @@
     word-break: break-word;
   }
 
+  /* Highlight the option the learner chose */
   .result-label.mine { color: var(--brand); font-weight: 700; }
 
   .bar-container {
@@ -141,52 +170,65 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    height: 18px;
+    height: 20px;              /* Matches bar track layout dimensions precisely */
   }
 
   .bar-track {
     flex-grow: 1;
-    height: 18px;
+    height: 20px;
     background: var(--bar-bg);
     border-radius: var(--radius);
     overflow: hidden;
   }
 
+  /* Bar animates from 0% to actual percentage on render */
   .bar-fill {
     height: 100%;
     background: var(--brand);
     width: 0%;
-    transition: width 0.4s ease-out;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    padding: 0;
+    transition: width 0.5s cubic-bezier(0.1,0.5,0.5,1);
+    display: flex !important;   
+    align-items: center !important; 
+    justify-content: center !important; 
+    min-width: 24px;           
+    padding: 0 !important;     
   }
 
+  /* ── Vote count inside bar ─────────────────────────────────────
+     Line height set to 1 since flex container attributes handle the absolute 
+     vertical alignment flow across varying VLE viewports.
+     ──────────────────────────────────────────────────────────── */
   .inner-number {
-    color: white;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 1;
-    text-align: center;
-    display: block;
-    margin: 0 auto;
+    color: white !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    line-height: 1 !important;
+    text-align: center !important;
+    display: block !important;
+    width: auto !important;
+    margin: 0 auto !important; 
+    padding: 0 !important;     
   }
 
+  /* Percent text configuration locked down with absolute centering metrics */
   .result-pct {
-    font-size: 13px;
+    font-size: 14px !important;/* Standardized results text height per instruction */
     min-width: 38px;
     text-align: right;
     font-weight: 500;
     color: var(--text);
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-end;
-    height: 18px;
-    line-height: 1;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 20px !important;   /* Matches track heights to clear tracking anomalies */
+    line-height: 1 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
+  /* ── Footer line ───────────────────────────────────────────────
+     Sits below result rows. Height (44px) matches .submit-btn so
+     the overall card height stays identical between views.
+     ──────────────────────────────────────────────────────────── */
   .footer-text-line {
     margin-top: 16px;
     font-size: 15px;
@@ -206,6 +248,11 @@
     line-height: 1.4;
   }
 
+  /* ── Skeleton loader ───────────────────────────────────────────
+     Kept in code but no longer shown on initial load.
+     Only used if JS explicitly calls show("loading-view").
+     Dimensions match real buttons so no layout shift if shown.
+     ──────────────────────────────────────────────────────────── */
   .skel {
     border-radius: var(--radius);
     background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
@@ -213,32 +260,46 @@
     animation: shimmer 1.2s infinite;
   }
 
-  .skel-option { height: 60px; margin-bottom: 12px; }
+  .skel-option {
+    height: 50px;              /* matches .option-btn height */
+    margin-bottom: 10px;
+  }
+
   .skel-option:last-child { margin-bottom: 0; }
-  .skel-submit { height: 44px; margin-top: 16px; }
+
+  .skel-submit {
+    height: 44px;              /* matches .submit-btn height */
+    margin-top: 16px;
+  }
 
   @keyframes shimmer {
     0%   { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
 
+  /* ── Error state ───────────────────────────────────────────────
+     White background for accessibility — avoids contrast issues.
+     Brand red (#E3120B) text and border locked down with absolute overrides.
+     Clean layout scales cleanly with medium-weight font tokening.
+     ──────────────────────────────────────────────────────────── */
   .error-banner {
-    padding: 16px 24px;
-    background: var(--error-bg);
-    border: 1px solid var(--error-border);
-    border-radius: var(--radius);
-    font-size: 15px;
-    font-weight: 500;
-    color: var(--error-text);
-    line-height: 1.5;
-    text-align: center;
-    width: 100%;
-    box-sizing: border-box;
+    padding: 16px !important;
+    background: var(--error-bg) !important;
+    border: 1px solid var(--error-border) !important;
+    border-radius: var(--radius) !important;
+    font-size: 14px !important; 
+    font-weight: 500 !important;
+    color: var(--error-text) !important; /* Locks down Economist Hex Specification #E3120B */
+    line-height: 1.5 !important;
+    text-align: center !important;
   }
 
-  #error-view { display: none; }
-
-
+  #error-view {
+    display: none;
+    flex-grow: 1;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
 
   @media (max-width: 480px) {
     .poll { padding: 16px; }
@@ -254,43 +315,45 @@ var SCRIPT_URL = null;
 var POLL       = null;
 </script>
 
-<main class="poll" role="region" aria-labelledby="poll-question">
-  <h2 class="poll-question" id="poll-question"></h2>
+<div class="poll">
+  <div class="poll-question" id="poll-question"></div>
 
-  <div id="loading-view" aria-hidden="true" aria-label="Poll loading">
+  <div id="loading-view">
     <div id="skel-options"></div>
     <div class="skel skel-submit"></div>
   </div>
 
   <div id="vote-view">
-    <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
-    <button class="submit-btn" id="submit-btn" onclick="submitVote()">Submit</button>
-    <div id="vote-error-inline" class="error-banner" style="display:none" role="alert"></div>
+    <div class="options" id="options-list"></div>
+    <button class="submit-btn" id="submit-btn" onclick="submitVote()">
+      Submit
+    </button>
+    <div id="vote-error-inline" class="error-banner" style="display:none"></div>
   </div>
 
-  <div id="results-view" aria-live="polite">
+  <div id="results-view">
     <div class="results" id="results-list"></div>
     <div class="footer-text-line">
-      <span id="footer-text">You’ve already voted.</span>
+      <span id="footer-text">You've already voted.</span>
       <span id="total-note"></span>
     </div>
   </div>
 
-  <div id="error-view" role="alert">
+  <div id="error-view">
     <div class="error-banner" id="error-msg"></div>
   </div>
-</main>
+</div>
 
 <script>
 (function () {
-  var urlParams = new URLSearchParams(window.location.search);
-  var intakeId  = urlParams.get("intake")   || null;
-  var courseId  = urlParams.get("courseID") || null;
-  var pollId    = urlParams.get("pollID")   || null;
-  var uid       = null;
-  var uidReady  = false;
-  var hasVoted  = false;
-  var selected  = null;
+  var params   = new URLSearchParams(window.location.search);
+  var intakeId = params.get("intake")   || null;
+  var courseId = params.get("courseID") || null;
+  var pollId   = params.get("pollID")   || null;
+  var uid      = null;
+  var uidReady = false;
+  var hasVoted = false;
+  var selected = null;
 
   var CACHE_KEY = (courseId && pollId && intakeId)
     ? "ee-poll-voted-" + courseId + "-" + pollId + "-" + intakeId
@@ -301,58 +364,21 @@ var POLL       = null;
     return;
   }
 
-  // ── Show skeleton immediately ────────────────────────────────
-  (function() {
-    var skelList = document.getElementById("skel-options");
-    for (var i = 0; i < 3; i++) {
-      var s = document.createElement("div");
-      s.className = "skel skel-option";
-      skelList.appendChild(s);
-    }
-    document.getElementById("loading-view").style.display = "flex";
-  })();
-
-  // ── Parallel fetch: polls.json + Moodle userId together ──────
-  // Both fire simultaneously — by the time polls.json resolves,
-  // userId is often already available, saving a full round trip.
-  var uidPromise = new Promise(function(resolve) {
-    window.addEventListener("message", function(event) {
-      if (!event.data || event.data.type !== "moodleUserId") return;
-      var userId = (event.data.userId && event.data.userId !== "0")
-        ? String(event.data.userId)
-        : "anonymous";
-      resolve(userId);
-    });
-    // Fallback if no postMessage received within 1.5s
-    setTimeout(function() { resolve("anonymous"); }, 1500);
-  });
-
-  var jsonPromise = fetch("polls.json")
+  fetch("polls.json?v=1.0")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
       return r.json();
-    });
-
-  Promise.all([jsonPromise, uidPromise])
-    .then(function(resolved) {
-      var data = resolved[0];
-      uid      = resolved[1];
-      uidReady = true;
-
-      var scriptUrl = data.scriptUrl || null;
-      if (!scriptUrl) throw new Error("No scriptUrl in polls.json");
-
+    })
+    .then(function(data) {
       var course = (data.courses || []).find(function(c) { return c.courseID === courseId; });
       if (!course) throw new Error("Course not found: " + courseId);
       var poll = (course.polls || []).find(function(p) { return p.pollID === pollId; });
       if (!poll) throw new Error("Poll not found: " + pollId);
-
       POLL = { question: poll.question, options: poll.options };
-      window.__pollOptionCount = poll.options.length;
-
+      if (!course.scriptUrl) throw new Error("No scriptUrl for course: " + courseId);
       var sheetId = poll.sheetID || course.sheetID || null;
       if (!sheetId) throw new Error("No sheetID found for poll: " + pollId);
-      SCRIPT_URL = scriptUrl + "?sheetId=" + encodeURIComponent(sheetId);
+      SCRIPT_URL = course.scriptUrl + "?sheetId=" + encodeURIComponent(sheetId);
       initialisePoll();
     })
     .catch(function(err) {
@@ -361,335 +387,326 @@ var POLL       = null;
     });
 
   function initialisePoll() {
-    // Clear generic skeleton, show real content
-    document.getElementById("skel-options").innerHTML = "";
-    document.getElementById("loading-view").style.display = "none";
-    document.getElementById("poll-question").textContent = POLL.question;
-    buildSkeleton();
-    buildOptions();
+  document.getElementById("poll-question").textContent = POLL.question;
+  buildSkeleton();
+  buildOptions();
 
-    // Don't show cached results — go straight to skeleton while
-    // checkVoteStatus fetches real counts from the sheet.
-    // This prevents the "1 response" flash before real data loads.
-    var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
-    if (cachedAnswer) {
-      hasVoted = true;
-      show("loading-view");
-    } else {
-      show("vote-view");
-    }
+  if (!intakeId) {
+    showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
+    return;
+  }
 
-    // uid and uidReady are already set by the parallel Promise.all above.
-    // Kick off vote status check immediately.
+  // ── Local Storage Optimization Check ─────────────────────────────
+  // Instantly displays results screen layout if student has voted on this device before.
+  // Completely eliminates perceived network latency from the user loop.
+  var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
+  if (cachedAnswer) {
+    hasVoted = true;
+    var initialCounts = {};
+    POLL.options.forEach(function(opt) {
+      initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
+    });
+    renderResults(initialCounts, 1, false, cachedAnswer);
+  } else {
+    show("vote-view");
+  }
+
+  var urlUid = new URLSearchParams(window.location.search).get("uid");
+  if (urlUid) {
+    uid = urlUid;
+    uidReady = true;
     checkVoteStatus();
-
-    function checkVoteStatus() {
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data.ok) return;
-        if (data.voted && CACHE_KEY) {
-          localStorage.setItem(CACHE_KEY, data.answer);
-        }
-        if (data.voted) {
-          renderResults(data.counts, data.total, false, data.answer);
-          startPostVoteBurst();
-        } else if (hasVoted && !data.voted) {
-          if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
-          hasVoted = false;
-          hide("results-view");
-          show("vote-view");
-        }
-      })
-      .catch(function() {});
-    }
-
-    // ── Live results refresh ──────────────────────────────────
-    // Refreshes results every 10 seconds while tab is visible.
-    // Pauses when tab is hidden, resumes immediately on return.
-    // Only runs after the user has voted.
-    var refreshActive = false;
-
-    function fetchLatestResults(onComplete) {
-      if (refreshActive) return;
-      refreshActive = true;
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "results", intakeId: intakeId, pollId: pollId, uid: uid })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.counts) {
-          updateBars(data.counts, data.total);
-          setFooter(data.total);
-        }
-      })
-      .catch(function() {})
-      .finally(function() {
-        refreshActive = false;
-        if (onComplete) onComplete();
-      });
-    }
-
-    // ── Post-vote burst refresh ───────────────────────────────
-    // After voting, fetch real results at 3s, 8s, 15s, 30s.
-    // This catches other users who voted around the same time
-    // without continuous polling. After 30s results are stable.
-    function startPostVoteBurst() {
-      var delays = [3000, 8000, 15000, 30000];
-      delays.forEach(function(delay) {
-        setTimeout(function() {
-          if (hasVoted) fetchLatestResults();
-        }, delay);
-      });
-    }
-
-    // Refresh when learner returns to the tab after being away
-    document.addEventListener("visibilitychange", function() {
-      if (!document.hidden && hasVoted) {
-        fetchLatestResults();
-      }
+  } else {
+    window.addEventListener("message", function(event) {
+      if (!event.data || event.data.type !== "moodleUserId") return;
+      if (uidReady) return;
+      uid = (event.data.userId && event.data.userId !== "0")
+        ? String(event.data.userId)
+        : "anonymous";
+      uidReady = true;
+      checkVoteStatus();
     });
 
-    function buildSkeleton() {
-      var skelList = document.getElementById("skel-options");
-      skelList.innerHTML = "";
-      POLL.options.forEach(function() {
-        var s = document.createElement("div");
-        s.className = "skel skel-option";
-        skelList.appendChild(s);
-      });
-    }
+    setTimeout(function() {
+      if (uidReady) return;
+      uid = "anonymous";
+      uidReady = true;
+      checkVoteStatus();
+    }, 1500);              
+  }
 
-    function buildOptions() {
-      var list = document.getElementById("options-list");
-      list.innerHTML = "";
-      POLL.options.forEach(function(opt, i) {
-        var btn = document.createElement("button");
-        btn.className   = "option-btn";
-        btn.textContent = opt;
-        btn.setAttribute("aria-pressed", "false");
-        btn.addEventListener("click", function() {
-          selected = i;
-          document.querySelectorAll(".option-btn").forEach(function(b, idx) {
-            b.style.borderColor = (idx === i) ? "var(--brand)" : "#ddd";
-            b.style.background  = (idx === i) ? "#f4f6ff"      : "#fff";
-            b.setAttribute("aria-pressed", idx === i ? "true" : "false");
-          });
-          document.getElementById("submit-btn").disabled = false;
-        });
-        list.appendChild(btn);
-      });
-    }
+  var refreshActive = false;
 
-    window.submitVote = function() {
-      if (selected === null) {
-        // Focus first option so keyboard/screen reader users know what to do
-        var firstBtn = document.querySelector(".option-btn");
-        if (firstBtn) firstBtn.focus();
-        return;
+  function fetchLatestResults() {
+    if (refreshActive) return;
+    refreshActive = true;
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "results", intakeId: intakeId, pollId: pollId, uid: uid })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok && data.counts) {
+        updateBars(data.counts, data.total);
+        setFooter(data.total);
       }
-      if (!uidReady) return;
+    })
+    .catch(function() {})
+    .finally(function() { refreshActive = false; });
+  }
 
-      var chosenOption = POLL.options[selected];
-      hasVoted = true;
+  function startPostVoteBurst() {
+    [3000, 8000, 20000].forEach(function(delay) {
+      setTimeout(function() {
+        if (hasVoted) fetchLatestResults();
+      }, delay);
+    });
+  }
 
-      if (CACHE_KEY) localStorage.setItem(CACHE_KEY, chosenOption);
+  document.addEventListener("visibilitychange", function() {
+    if (!document.hidden && hasVoted) fetchLatestResults();
+  });
 
-      document.getElementById("submit-btn").disabled = true;
-      document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
+  function checkVoteStatus() {
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.ok) return; 
+      
+      // Update local storage records dynamically if database sync confirms previous execution
+      if (data.voted && CACHE_KEY) {
+        localStorage.setItem(CACHE_KEY, data.answer);
+      }
+      
+      if (data.voted) {
+        renderResults(data.counts, data.total, false, data.answer);
+        startPostVoteBurst();
+      } else if (hasVoted && !data.voted) {
+        // Edge condition override: cache existed but sheet marks user as unvoted (e.g. data manual clear)
+        if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
+        hasVoted = false;
+        hide("results-view");
+        show("vote-view");
+      }
+    })
+    .catch(function() {
+      // Silent fail
+    });
+  }
 
-      var optimisticCounts = {};
-      POLL.options.forEach(function(opt) {
-        optimisticCounts[opt] = (opt === chosenOption) ? 1 : 0;
+  // Creates one skel-option div per poll option so the skeleton is exactly the same height
+  function buildSkeleton() {
+    var skelList = document.getElementById("skel-options");
+    POLL.options.forEach(function() {
+      var s = document.createElement("div");
+      s.className = "skel skel-option";
+      skelList.appendChild(s);
+    });
+  }
+
+  // Creates one button per option from the POLL.options array
+  function buildOptions() {
+    var list = document.getElementById("options-list");
+    POLL.options.forEach(function(opt, i) {
+      var btn = document.createElement("button");
+      btn.className   = "option-btn";
+      btn.textContent = opt;
+      btn.addEventListener("click", function() {
+        selected = i;
+        document.querySelectorAll(".option-btn").forEach(function(b, idx) {
+          b.style.borderColor = (idx === i) ? "var(--brand)" : "#ddd";
+          b.style.background  = (idx === i) ? "#f4f6ff"      : "#fff";
+        });
+        document.getElementById("submit-btn").disabled = false;
       });
+      list.appendChild(btn);
+    });
+  }
 
-      renderResults(optimisticCounts, 1, true, chosenOption);
+  // Optimistic UI patterns for submissions
+  window.submitVote = function() {
+    if (selected === null || !uidReady) return;
 
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action:   "vote",
-          intakeId: intakeId,
-          pollId:   pollId,
-          option:   chosenOption,
-          uid:      uid
-        })
+    var chosenOption = POLL.options[selected];
+    hasVoted = true;
+
+    // Cache the selection locally right away to capture the state change instantly
+    if (CACHE_KEY) {
+      localStorage.setItem(CACHE_KEY, chosenOption);
+    }
+
+    document.getElementById("submit-btn").disabled = true;
+    document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
+
+    var optimisticCounts = {};
+    POLL.options.forEach(function(opt) {
+      optimisticCounts[opt] = (opt === chosenOption) ? 1 : 0;
+    });
+
+    renderResults(optimisticCounts, 1, true, chosenOption);
+
+    fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action:   "vote",
+        intakeId: intakeId,
+        pollId:   pollId,
+        option:   chosenOption,
+        uid:      uid
       })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.counts) {
-          updateBars(data.counts, data.total);
-          setFooter(data.total);
-        }
-      })
-      .catch(function() {});
-      // Start burst refresh so user sees other votes coming in
-      startPostVoteBurst();
-    };
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.ok && data.counts) {
+        updateBars(data.counts, data.total);
+        setFooter(data.total);
+      }
+    })
+    .catch(function() {
+      // Silent fail
+    });
+    startPostVoteBurst();
+  };
 
-    function renderResults(counts, total, justVoted, myAnswer) {
-      var box       = document.getElementById("results-list");
-      var safeTotal = total || 0;
-      box.innerHTML = "";
+  function renderResults(counts, total, justVoted, myAnswer) {
+    var box       = document.getElementById("results-list");
+    var safeTotal = total || 0;
+    box.innerHTML = "";
 
-      POLL.options.forEach(function(opt) {
-        var votes = (counts && counts[opt]) ? counts[opt] : 0;
-        var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
-        var mine  = opt === myAnswer;
+    POLL.options.forEach(function(opt, idx) {
+      var votes = (counts && counts[opt]) ? counts[opt] : 0;
+      var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
+      var mine  = opt === myAnswer;
 
-        var row = document.createElement("div");
-        row.className = "result-row";
-        row.innerHTML =
-          '<div class="result-label' + (mine ? " mine" : "") + '">' +
-            (mine ? "\u2713 " : "") + opt +
-          '</div>' +
-          '<div class="bar-container">' +
-            '<div class="bar-track" role="img" aria-label="' + opt + ': ' + pct + '% of votes">' +
-              '<div class="bar-fill" style="width:0%">' +
-                '<span class="inner-number">' + votes + '</span>' +
-              '</div>' +
+      var row = document.createElement("div");
+      row.className = "result-row";
+      row.innerHTML =
+        '<div class="result-label' + (mine ? " mine" : "") + '">' +
+          (mine ? "✓ " : "") + opt +
+        '</div>' +
+        '<div class="bar-container">' +
+          '<div class="bar-track">' +
+            '<div class="bar-fill" style="width:0%">' +
+              '<span class="inner-number">' + votes + '</span>' +
             '</div>' +
-            '<div class="result-pct">' + pct + '%</div>' +
-          '</div>';
-        box.appendChild(row);
-      });
+          '</div>' +
+          '<div class="result-pct">' + pct + '%</div>' +
+        '</div>';
+      box.appendChild(row);
+    });
 
-      setFooter(safeTotal);
-      hide("loading-view");
-      hide("vote-view");
-      show("results-view");
+    setFooter(safeTotal);
+    hide("loading-view");
+    hide("vote-view");
+    show("results-view");
 
-      if (window.__triggerFrameHeight) window.__triggerFrameHeight();
-
+    requestAnimationFrame(function() {
       requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          box.querySelectorAll(".result-row").forEach(function(row, idx) {
-            var opt   = POLL.options[idx];
-            var votes = (counts && counts[opt]) ? counts[opt] : 0;
-            var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
-            var bar   = row.querySelector(".bar-fill");
-            if (bar) bar.style.width = pct + "%";
-          });
+        box.querySelectorAll(".result-row").forEach(function(row, idx) {
+          var opt   = POLL.options[idx];
+          var votes = (counts && counts[opt]) ? counts[opt] : 0;
+          var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
+          var bar   = row.querySelector(".bar-fill");
+          if (bar) bar.style.width = pct + "%";
         });
       });
-    }
-
-    function updateBars(counts, total) {
-      var safeTotal = total || 0;
-      document.querySelectorAll(".result-row").forEach(function(row, idx) {
-        var opt   = POLL.options[idx];
-        var votes = (counts && counts[opt]) ? counts[opt] : 0;
-        var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
-        var bar   = row.querySelector(".bar-fill");
-        var num   = row.querySelector(".inner-number");
-        var pctEl = row.querySelector(".result-pct");
-        if (bar)   bar.style.width   = pct + "%";
-        if (num)   num.textContent   = votes;
-        if (pctEl) pctEl.textContent = pct + "%";
-      });
-    }
-
-    function setFooter(total) {
-      var safeTotal = total || 0;
-      var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
-      document.getElementById("footer-text").textContent = "You’ve already voted.";
-      document.getElementById("total-note").textContent  = " There are " + count;
-    }
-
-    function show(id) { document.getElementById(id).style.display = "flex"; }
-    function hide(id) { document.getElementById(id).style.display = "none"; }
-
-    function showError(msg) {
-      hide("loading-view");
-      hide("vote-view");
-      document.getElementById("error-msg").textContent = msg;
-      show("error-view");
-      if (window.__triggerFrameHeight) window.__triggerFrameHeight();
-    }
+    });
   }
 
-  // Top-level showError for pre-init errors (missing URL params)
+  function updateBars(counts, total) {
+    var safeTotal = total || 0;
+    document.querySelectorAll(".result-row").forEach(function(row, idx) {
+      var opt   = POLL.options[idx];
+      var votes = (counts && counts[opt]) ? counts[opt] : 0;
+      var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
+      var bar   = row.querySelector(".bar-fill");
+      var num   = row.querySelector(".inner-number");
+      var pctEl = row.querySelector(".result-pct");
+      if (bar)   bar.style.width   = pct + "%";
+      if (num)   num.textContent   = votes;
+      if (pctEl) pctEl.textContent = pct + "%";
+    });
+  }
+
+  function setFooter(total) {
+    var safeTotal = total || 0;
+    var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
+    document.getElementById("footer-text").textContent = "You've already voted.";
+    document.getElementById("total-note").textContent  = " There are " + count;
+  }
+
+  function show(id) { document.getElementById(id).style.display = "flex"; }
+  function hide(id) { document.getElementById(id).style.display = "none"; }
+
+  // Fallback error messaging
   function showError(msg) {
-    document.getElementById("loading-view").style.display = "none";
-    document.getElementById("vote-view").style.display    = "none";
+    hide("loading-view");
+    hide("vote-view");
     document.getElementById("error-msg").textContent = msg;
-    document.getElementById("error-view").style.display   = "flex";
+    show("error-view");
   }
+
+  } // end initialisePoll()
 
 })();
 </script>
-
 <script>
-// Frame messaging height script
+// Frame messaging heights alignment hooks
 (function() {
-  var lastHeight  = 0;
+  var lastHeight = 0;
   var stableCount = 0;
-  var roTimer     = null;
 
-  var searchParams = new URLSearchParams(window.location.search);
-  var intakeId     = searchParams.get('intake')   || null;
-  var courseId     = searchParams.get('courseID') || null;
-  var pollId       = searchParams.get('pollID')   || null;
-
-  function postHeight(h) {
-    if (!h || h <= 0) return;
-    window.parent.postMessage({
-      type:     'iframe-height',
-      courseId: courseId,
-      pollId:   pollId,
-      intakeId: intakeId,
-      height:   h
-    }, '*');
-  }
+  // Derive pollId/intakeId so the parent's stability check can use them
+  // instead of falling back to origin-only matching.
+  var params   = new URLSearchParams(window.location.search);
+  var intakeId = params.get('intake')   || null;
+  var courseId = params.get('courseID') || null;
+  // pollId must match what the Moodle listener extracts from the iframe src pathname
+  var pollId = (function() {
+    var parts = window.location.pathname.split('/').filter(Boolean);
+    return parts.length ? parts[0] : null;
+  })();
 
   function sendHeight() {
-    var pollCard = document.querySelector('.poll');
-    if (!pollCard) return;
-    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 36;
+    var currentHeight = document.body.scrollHeight;
     if (currentHeight === lastHeight) {
       stableCount++;
       if (stableCount >= 3) return;
     } else {
       stableCount = 0;
-      lastHeight  = currentHeight;
+      lastHeight = currentHeight;
     }
-    postHeight(currentHeight);
+    window.parent.postMessage({
+      type: 'iframe-height',
+      courseId: courseId,
+      pollId: pollId,
+      intakeId: intakeId,
+      height: currentHeight
+    }, '*');
   }
 
-  window.__triggerFrameHeight = function() {
-    stableCount = 0;
-    sendHeight();
-  };
-
+  // Fire immediately - don't wait 500ms before the first correction.
+  // This is what closes the visible gap on the shorter (pre-vote) state.
   sendHeight();
 
-  var countPoller = setInterval(function() {
-    if (window.__pollOptionCount) {
-      clearInterval(countPoller);
-      sendHeight();
-    }
-  }, 20);
-  setTimeout(function() { clearInterval(countPoller); }, 4000);
+  // Keep the short retry burst as a safety net for late web-font/layout shifts
+  var retryCount = 0;
+  var retryInterval = setInterval(function() {
+    sendHeight();
+    retryCount++;
+    if (retryCount >= 10) clearInterval(retryInterval);
+  }, 300);
 
+  // Re-fire on any genuine content height change (vote -> results, errors, etc.)
   if (window.ResizeObserver) {
     var observer = new ResizeObserver(function() {
-      clearTimeout(roTimer);
-      roTimer = setTimeout(function() {
-        stableCount = 0;
-        sendHeight();
-      }, 30);
+      stableCount = 0;
+      sendHeight();
     });
     observer.observe(document.body);
   }
-
-  window.addEventListener('load', function() {
-    setTimeout(sendHeight, 100);
-  });
 })();
 </script>
-</body>
-</html>
