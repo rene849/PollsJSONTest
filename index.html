@@ -343,7 +343,7 @@ var POLL       = null;
     }
   });
 
-  // Poll: Fetch with hard timeout (8000ms)
+  // Poll: Fetch with hard timeout handling (8000ms)
   function fetchWithTimeout(url, options, timeoutMs) {
     var ms = timeoutMs || 8000;
     var controller = new AbortController();
@@ -397,18 +397,23 @@ var POLL       = null;
     buildOptions();
 
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
+
     if (cachedAnswer) {
       hasVoted = true;
+      // Poll: Keep spinner active on reload so stale 1-vote state is never shown
       show("loading-view");
+      hide("vote-view");
+      hide("results-view");
       revealPoll();
     } else {
       show("vote-view");
+      hide("loading-view");
+      hide("results-view");
       revealPoll();
     }
 
     checkVoteStatus();
 
-    // Poll: Stagger initial load request with jitter & timeout handling
     function checkVoteStatus() {
       var jitter = Math.floor(Math.random() * 450);
       setTimeout(function() {
@@ -418,25 +423,21 @@ var POLL       = null;
         }, 8000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
+          hide("loading-view");
           if (!data.ok) {
-            hide("loading-view");
+            if (!hasVoted) show("vote-view");
             revealPoll();
             return;
           }
-          if (data.voted && CACHE_KEY) {
-            localStorage.setItem(CACHE_KEY, data.answer);
-          }
+
           if (data.voted) {
-            hide("loading-view");
+            if (CACHE_KEY) localStorage.setItem(CACHE_KEY, data.answer);
             renderResults(data.counts, data.total, false, data.answer);
-          } else if (hasVoted && !data.voted) {
+          } else {
             if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
             hasVoted = false;
             hide("results-view");
-            hide("loading-view");
             show("vote-view");
-          } else {
-            hide("loading-view");
           }
           revealPoll();
         })
@@ -477,7 +478,6 @@ var POLL       = null;
       });
     }
 
-    // Poll: Resilient vote submission with strict timeouts and auto-retries
     window.submitVote = function() {
       if (selected === null) {
         var firstBtn = document.querySelector(".option-btn");
