@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poll</title>
 
+<!-- Poll: Styling & Design System -->
 <style>
   :root {
     --brand:        #2E45B8;
@@ -629,8 +630,8 @@ var POLL       = null;
 })();
 </script>
 
+<!-- Poll: Anti-Jitter Auto-Resizing Script -->
 <script>
-// Frame messaging height script
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
@@ -655,14 +656,19 @@ var POLL       = null;
   function sendHeight() {
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
-    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 36;
-    if (currentHeight === lastHeight) {
+
+    // Calculate precise container height
+    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 24;
+
+    // Polls: Ignore micro-fluctuations under 10px to prevent UI layout shift and page shaking
+    if (Math.abs(currentHeight - lastHeight) < 10) {
       stableCount++;
-      if (stableCount >= 3) return;
+      if (stableCount >= 2) return;
     } else {
       stableCount = 0;
       lastHeight  = currentHeight;
     }
+
     postHeight(currentHeight);
   }
 
