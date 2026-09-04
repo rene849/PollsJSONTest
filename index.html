@@ -30,6 +30,8 @@
     overflow: hidden; 
     margin: 0;
     padding: 12px; 
+    text-rendering: optimizeSpeed;
+    -webkit-font-smoothing: antialiased;
   }
 
   .poll {
@@ -604,8 +606,11 @@ var POLL       = null;
     function hide(id) { document.getElementById(id).style.display = "none"; }
 
     function revealPoll() {
+      if (window.__triggerFrameHeight) window.__triggerFrameHeight();
       requestAnimationFrame(function() {
-        document.querySelector(".poll").classList.add("is-ready");
+        setTimeout(function() {
+          document.querySelector(".poll").classList.add("is-ready");
+        }, 50);
       });
     }
 
@@ -657,11 +662,11 @@ var POLL       = null;
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
 
-    // Calculate precise container height
-    var currentHeight = Math.ceil(pollCard.getBoundingClientRect().height) + 24;
+    // Measure exact element offset height + outer margin padding
+    var currentHeight = pollCard.offsetHeight + 16;
 
-    // Polls: Ignore micro-fluctuations under 10px to prevent UI layout shift and page shaking
-    if (Math.abs(currentHeight - lastHeight) < 10) {
+    // Ignore tiny shifts under 6px to eliminate page shaking
+    if (Math.abs(currentHeight - lastHeight) < 6) {
       stableCount++;
       if (stableCount >= 2) return;
     } else {
