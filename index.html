@@ -426,9 +426,7 @@ var POLL       = null;
           hide("loading-view");
           if (!data.ok || !data.counts) {
             if (cachedAnswer) {
-              var safeCounts = {};
-              safeCounts[cachedAnswer] = 1;
-              renderResults(safeCounts, 1, false, cachedAnswer);
+              renderResults({}, 0, false, cachedAnswer);
             } else {
               show("vote-view");
             }
@@ -436,18 +434,12 @@ var POLL       = null;
             return;
           }
 
-          if (data.voted || cachedAnswer) {
-            var myAnswer = data.voted ? data.answer : cachedAnswer;
-            if (CACHE_KEY) localStorage.setItem(CACHE_KEY, myAnswer);
-
-            var displayTotal  = (data.total && data.total > 0) ? data.total : 1;
-            var displayCounts = (data.counts && Object.keys(data.counts).length > 0) ? data.counts : {};
-            
-            if (data.total === 0 && myAnswer) {
-              displayCounts[myAnswer] = 1;
-            }
-
-            renderResults(displayCounts, displayTotal, false, myAnswer);
+          if (data.voted) {
+            var trueAnswer = data.answer;
+            if (CACHE_KEY) localStorage.setItem(CACHE_KEY, trueAnswer);
+            renderResults(data.counts, data.total, false, trueAnswer);
+          } else if (cachedAnswer) {
+            renderResults(data.counts, data.total, false, cachedAnswer);
           } else {
             if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
             hasVoted = false;
@@ -459,9 +451,7 @@ var POLL       = null;
         .catch(function() {
           hide("loading-view");
           if (cachedAnswer) {
-            var fallbackCounts = {};
-            fallbackCounts[cachedAnswer] = 1;
-            renderResults(fallbackCounts, 1, false, cachedAnswer);
+            renderResults({}, 0, false, cachedAnswer);
           } else {
             show("vote-view");
           }
@@ -608,10 +598,14 @@ var POLL       = null;
 
     function setFooter(total) {
       var safeTotal = total || 0;
-      var verb = safeTotal === 1 ? "is" : "are";
-      var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
       document.getElementById("footer-text").textContent = "You’ve already voted.";
-      document.getElementById("total-note").textContent  = " There " + verb + " " + count;
+      if (safeTotal === 0) {
+        document.getElementById("total-note").textContent = "";
+      } else {
+        var verb = safeTotal === 1 ? "is" : "are";
+        var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
+        document.getElementById("total-note").textContent  = " There " + verb + " " + count;
+      }
     }
 
     function show(id) { document.getElementById(id).style.display = "flex"; }
