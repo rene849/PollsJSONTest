@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Poll</title>
 
-<!-- Poll: Styling & Design System -->
 <style>
   :root {
     --brand:        #2E45B8;
@@ -343,7 +342,6 @@ var POLL       = null;
     }
   });
 
-  // Poll: Fetch with hard timeout handling (8000ms)
   function fetchWithTimeout(url, options, timeoutMs) {
     var ms = timeoutMs || 8000;
     var controller = new AbortController();
@@ -400,7 +398,6 @@ var POLL       = null;
 
     if (cachedAnswer) {
       hasVoted = true;
-      // Poll: Keep spinner active on reload so stale 1-vote state is never shown
       show("loading-view");
       hide("vote-view");
       hide("results-view");
@@ -425,14 +422,19 @@ var POLL       = null;
         .then(function(data) {
           hide("loading-view");
           if (!data.ok) {
-            if (!hasVoted) show("vote-view");
+            if (cachedAnswer) {
+              renderResults({}, 0, false, cachedAnswer);
+            } else {
+              show("vote-view");
+            }
             revealPoll();
             return;
           }
 
-          if (data.voted) {
-            if (CACHE_KEY) localStorage.setItem(CACHE_KEY, data.answer);
-            renderResults(data.counts, data.total, false, data.answer);
+          if (data.voted || cachedAnswer) {
+            var myAnswer = data.voted ? data.answer : cachedAnswer;
+            if (CACHE_KEY) localStorage.setItem(CACHE_KEY, myAnswer);
+            renderResults(data.counts, data.total, false, myAnswer);
           } else {
             if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
             hasVoted = false;
@@ -444,11 +446,7 @@ var POLL       = null;
         .catch(function() {
           hide("loading-view");
           if (cachedAnswer) {
-            var optimisticCounts = {};
-            POLL.options.forEach(function(opt) {
-              optimisticCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
-            });
-            renderResults(optimisticCounts, 1, false, cachedAnswer);
+            renderResults({}, 0, false, cachedAnswer);
           } else {
             show("vote-view");
           }
@@ -631,8 +629,8 @@ var POLL       = null;
 })();
 </script>
 
-<!-- Poll: Frame Height Messaging & Resizing -->
 <script>
+// Frame messaging height script
 (function() {
   var lastHeight  = 0;
   var stableCount = 0;
