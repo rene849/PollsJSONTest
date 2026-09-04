@@ -635,7 +635,7 @@ var POLL       = null;
 })();
 </script>
 
-<!-- Poll: Anti-Jitter Auto-Resizing Script -->
+<!-- Poll: Dynamic Auto-Resizing Script -->
 <script>
 (function() {
   var lastHeight  = 0;
@@ -662,11 +662,14 @@ var POLL       = null;
     var pollCard = document.querySelector('.poll');
     if (!pollCard) return;
 
-    // Measure exact element offset height + outer margin padding
-    var currentHeight = pollCard.offsetHeight + 16;
+    // Measure complete document height so no content gets clipped
+    var currentHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      pollCard.offsetHeight + 32
+    );
 
-    // Ignore tiny shifts under 6px to eliminate page shaking
-    if (Math.abs(currentHeight - lastHeight) < 6) {
+    if (Math.abs(currentHeight - lastHeight) < 4) {
       stableCount++;
       if (stableCount >= 2) return;
     } else {
