@@ -67,7 +67,6 @@
     flex-direction: column;
   }
 
-  /* Poll: Loading State Animation */
   .loading-container {
     display: flex;
     flex-direction: column;
@@ -278,7 +277,6 @@ var POLL       = null;
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
 
-  <!-- Poll: Loading View -->
   <div id="loading-view">
     <div class="loading-container">
       <div class="spinner"></div>
@@ -345,6 +343,27 @@ var POLL       = null;
     }
   });
 
+  // Poll: Fetch with hard timeout (8000ms)
+  function fetchWithTimeout(url, options, timeoutMs) {
+    var ms = timeoutMs || 8000;
+    var controller = new AbortController();
+    var signal = controller.signal;
+    options = options || {};
+    options.signal = signal;
+
+    var timeoutId = setTimeout(function() { controller.abort(); }, ms);
+
+    return fetch(url, options)
+      .then(function(response) {
+        clearTimeout(timeoutId);
+        return response;
+      })
+      .catch(function(err) {
+        clearTimeout(timeoutId);
+        throw err;
+      });
+  }
+
   fetch("polls.json")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
@@ -380,7 +399,6 @@ var POLL       = null;
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
     if (cachedAnswer) {
       hasVoted = true;
-      // Show loading screen while real counts fetch from backend
       show("loading-view");
       revealPoll();
     } else {
@@ -390,35 +408,52 @@ var POLL       = null;
 
     checkVoteStatus();
 
+    // Poll: Stagger initial load request with jitter & timeout handling
     function checkVoteStatus() {
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data.ok) return;
-        if (data.voted && CACHE_KEY) {
-          localStorage.setItem(CACHE_KEY, data.answer);
-        }
-        if (data.voted) {
+      var jitter = Math.floor(Math.random() * 450);
+      setTimeout(function() {
+        fetchWithTimeout(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
+        }, 8000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!data.ok) {
+            hide("loading-view");
+            revealPoll();
+            return;
+          }
+          if (data.voted && CACHE_KEY) {
+            localStorage.setItem(CACHE_KEY, data.answer);
+          }
+          if (data.voted) {
+            hide("loading-view");
+            renderResults(data.counts, data.total, false, data.answer);
+          } else if (hasVoted && !data.voted) {
+            if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
+            hasVoted = false;
+            hide("results-view");
+            hide("loading-view");
+            show("vote-view");
+          } else {
+            hide("loading-view");
+          }
+          revealPoll();
+        })
+        .catch(function() {
           hide("loading-view");
-          renderResults(data.counts, data.total, false, data.answer);
-        } else if (hasVoted && !data.voted) {
-          if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
-          hasVoted = false;
-          hide("results-view");
-          hide("loading-view");
-          show("vote-view");
-        } else {
-          hide("loading-view");
-        }
-        revealPoll();
-      })
-      .catch(function() {
-        hide("loading-view");
-        revealPoll();
-      });
+          if (cachedAnswer) {
+            var optimisticCounts = {};
+            POLL.options.forEach(function(opt) {
+              optimisticCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
+            });
+            renderResults(optimisticCounts, 1, false, cachedAnswer);
+          } else {
+            show("vote-view");
+          }
+          revealPoll();
+        });
+      }, jitter);
     }
 
     function buildOptions() {
@@ -442,6 +477,7 @@ var POLL       = null;
       });
     }
 
+    // Poll: Resilient vote submission with strict timeouts and auto-retries
     window.submitVote = function() {
       if (selected === null) {
         var firstBtn = document.querySelector(".option-btn");
@@ -457,7 +493,6 @@ var POLL       = null;
       document.getElementById("submit-btn").disabled = true;
       document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
 
-      // Poll: Transition to loading spinner immediately after clicking submit
       hide("vote-view");
       show("loading-view");
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
@@ -466,7 +501,7 @@ var POLL       = null;
 
       function executeVoteRequest() {
         attempts++;
-        fetch(SCRIPT_URL, {
+        fetchWithTimeout(SCRIPT_URL, {
           method: "POST",
           body: JSON.stringify({
             action:   "vote",
@@ -475,27 +510,36 @@ var POLL       = null;
             option:   chosenOption,
             uid:      uid
           })
-        })
+        }, 7000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.ok && data.counts && data.total > 0) {
             hide("loading-view");
             renderResults(data.counts, data.total, true, chosenOption);
           } else if (attempts < 3) {
-            setTimeout(executeVoteRequest, 300);
+            var backoff = 300 + (attempts * 200);
+            setTimeout(executeVoteRequest, backoff);
           } else {
-            hide("loading-view");
-            renderResults({}, 0, true, chosenOption);
+            fallbackLocalRender(chosenOption);
           }
         })
         .catch(function() {
           if (attempts < 3) {
-            setTimeout(executeVoteRequest, 300);
+            var backoff = 300 + (attempts * 200);
+            setTimeout(executeVoteRequest, backoff);
           } else {
-            hide("loading-view");
-            renderResults({}, 0, true, chosenOption);
+            fallbackLocalRender(chosenOption);
           }
         });
+      }
+
+      function fallbackLocalRender(myChoice) {
+        hide("loading-view");
+        var optimisticCounts = {};
+        POLL.options.forEach(function(opt) {
+          optimisticCounts[opt] = (opt === myChoice) ? 1 : 0;
+        });
+        renderResults(optimisticCounts, 1, true, myChoice);
       }
 
       executeVoteRequest();
@@ -546,21 +590,6 @@ var POLL       = null;
             if (bar) bar.style.width = pct + "%";
           });
         });
-      });
-    }
-
-    function updateBars(counts, total) {
-      var safeTotal = total || 0;
-      document.querySelectorAll(".result-row").forEach(function(row, idx) {
-        var opt   = POLL.options[idx];
-        var votes = (counts && counts[opt]) ? counts[opt] : 0;
-        var pct   = safeTotal > 0 ? Math.round((votes / safeTotal) * 100) : 0;
-        var bar   = row.querySelector(".bar-fill");
-        var num   = row.querySelector(".inner-number");
-        var pctEl = row.querySelector(".result-pct");
-        if (bar)   bar.style.width   = pct + "%";
-        if (num)   num.textContent   = votes;
-        if (pctEl) pctEl.textContent = pct + "%";
       });
     }
 
