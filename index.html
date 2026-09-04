@@ -32,7 +32,6 @@
     padding: 12px; 
   }
 
-  /* Poll: Smooth card visibility toggle */
   .poll {
     width: 100%;
     max-width: 600px;
@@ -66,6 +65,36 @@
   #loading-view, #vote-view, #results-view {
     display: none;
     flex-direction: column;
+  }
+
+  /* Poll: Loading State Animation */
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    gap: 12px;
+  }
+
+  .spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--bar-bg);
+    border-top: 3px solid var(--brand);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--brand);
   }
 
   .options, .results {
@@ -249,6 +278,14 @@ var POLL       = null;
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
 
+  <!-- Poll: Loading View -->
+  <div id="loading-view">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <div class="loading-text">Loading results...</div>
+    </div>
+  </div>
+
   <div id="vote-view">
     <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
     <button class="submit-btn" id="submit-btn" onclick="submitVote()" disabled>Submit</button>
@@ -290,12 +327,10 @@ var POLL       = null;
     return;
   }
 
-  // Poll: Request Moodle User ID immediately from parent frame
   if (window.parent) {
     window.parent.postMessage({ type: 'requestMoodleUserId' }, '*');
   }
 
-  // Poll: Dynamic listener for Moodle User ID postMessage
   window.addEventListener("message", function(event) {
     if (!event.data || event.data.type !== "moodleUserId") return;
     if (event.data.userId && String(event.data.userId) !== "0") {
@@ -310,7 +345,6 @@ var POLL       = null;
     }
   });
 
-  // Poll: Fetch polls.json and render UI immediately without waiting on Moodle ID handshake
   fetch("polls.json")
     .then(function(r) {
       if (!r.ok) throw new Error("Could not load polls.json");
@@ -346,11 +380,9 @@ var POLL       = null;
     var cachedAnswer = CACHE_KEY ? localStorage.getItem(CACHE_KEY) : null;
     if (cachedAnswer) {
       hasVoted = true;
-      var initialCounts = {};
-      POLL.options.forEach(function(opt) {
-        initialCounts[opt] = (opt === cachedAnswer) ? 1 : 0;
-      });
-      renderResults(initialCounts, 1, false, cachedAnswer);
+      // Show loading screen while real counts fetch from backend
+      show("loading-view");
+      revealPoll();
     } else {
       show("vote-view");
       revealPoll();
@@ -370,33 +402,23 @@ var POLL       = null;
           localStorage.setItem(CACHE_KEY, data.answer);
         }
         if (data.voted) {
+          hide("loading-view");
           renderResults(data.counts, data.total, false, data.answer);
         } else if (hasVoted && !data.voted) {
           if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
           hasVoted = false;
           hide("results-view");
+          hide("loading-view");
           show("vote-view");
+        } else {
+          hide("loading-view");
         }
         revealPoll();
       })
       .catch(function() {
+        hide("loading-view");
         revealPoll();
       });
-    }
-
-    function fetchLatestResults() {
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({ action: "results", intakeId: intakeId, pollId: pollId, uid: uid })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.counts) {
-          updateBars(data.counts, data.total);
-          setFooter(data.total);
-        }
-      })
-      .catch(function() {});
     }
 
     function buildOptions() {
@@ -435,36 +457,48 @@ var POLL       = null;
       document.getElementById("submit-btn").disabled = true;
       document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
 
-      var optimisticCounts = {};
-      POLL.options.forEach(function(opt) {
-        optimisticCounts[opt] = (opt === chosenOption) ? 1 : 0;
-      });
+      // Poll: Transition to loading spinner immediately after clicking submit
+      hide("vote-view");
+      show("loading-view");
+      if (window.__triggerFrameHeight) window.__triggerFrameHeight();
 
-      renderResults(optimisticCounts, 1, true, chosenOption);
+      var attempts = 0;
 
-      fetch(SCRIPT_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          action:   "vote",
-          intakeId: intakeId,
-          pollId:   pollId,
-          option:   chosenOption,
-          uid:      uid
+      function executeVoteRequest() {
+        attempts++;
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            action:   "vote",
+            intakeId: intakeId,
+            pollId:   pollId,
+            option:   chosenOption,
+            uid:      uid
+          })
         })
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.ok && data.counts) {
-          updateBars(data.counts, data.total);
-          setFooter(data.total);
-        } else {
-          fetchLatestResults();
-        }
-      })
-      .catch(function(err) {
-        console.error("Poll submission error:", err);
-        setTimeout(fetchLatestResults, 1000);
-      });
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.ok && data.counts && data.total > 0) {
+            hide("loading-view");
+            renderResults(data.counts, data.total, true, chosenOption);
+          } else if (attempts < 3) {
+            setTimeout(executeVoteRequest, 300);
+          } else {
+            hide("loading-view");
+            renderResults({}, 0, true, chosenOption);
+          }
+        })
+        .catch(function() {
+          if (attempts < 3) {
+            setTimeout(executeVoteRequest, 300);
+          } else {
+            hide("loading-view");
+            renderResults({}, 0, true, chosenOption);
+          }
+        });
+      }
+
+      executeVoteRequest();
     };
 
     function renderResults(counts, total, justVoted, myAnswer) {
@@ -496,6 +530,7 @@ var POLL       = null;
 
       setFooter(safeTotal);
       hide("vote-view");
+      hide("loading-view");
       show("results-view");
       revealPoll();
 
@@ -548,6 +583,7 @@ var POLL       = null;
 
     function showError(msg) {
       hide("vote-view");
+      hide("loading-view");
       document.getElementById("error-msg").textContent = msg;
       show("error-view");
       revealPoll();
@@ -557,6 +593,7 @@ var POLL       = null;
 
   function showError(msg) {
     document.getElementById("vote-view").style.display  = "none";
+    document.getElementById("loading-view").style.display = "none";
     document.getElementById("error-msg").textContent  = msg;
     document.getElementById("error-view").style.display = "flex";
     document.querySelector(".poll").classList.add("is-ready");
