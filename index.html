@@ -147,10 +147,6 @@
 
   .submit-btn:hover    { background: #1a2a6e; }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-  .submit-btn:focus-visible {
-    outline: 5px solid var(--focus);
-    outline-offset: 1px;
-  }
 
   .result-row {
     border: 1px solid #e0e0e0;
@@ -313,7 +309,7 @@ var POLL       = null;
   var pollId    = urlParams.get("pollID")   || null;
   var paramUid  = urlParams.get("uid")      || null;
 
-  var uid       = paramUid || "anonymous";
+  var uid       = paramUid ? String(paramUid).trim() : "anonymous";
   var uidReady  = !!paramUid;
   var hasVoted  = false;
   var selected  = null;
@@ -323,7 +319,7 @@ var POLL       = null;
     : null;
 
   if (!intakeId || !courseId || !pollId) {
-    showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
+    showError("Sorry, this poll is not working right now.");
     return;
   }
 
@@ -334,7 +330,7 @@ var POLL       = null;
   window.addEventListener("message", function(event) {
     if (!event.data || event.data.type !== "moodleUserId") return;
     if (event.data.userId && String(event.data.userId) !== "0") {
-      var newUid = String(event.data.userId);
+      var newUid = String(event.data.userId).trim();
       if (uid !== newUid) {
         uid = newUid;
         uidReady = true;
@@ -346,7 +342,7 @@ var POLL       = null;
   });
 
   function fetchWithTimeout(url, options, timeoutMs) {
-    var ms = timeoutMs || 9000;
+    var ms = timeoutMs || 10000;
     var controller = new AbortController();
     var signal = controller.signal;
     options = options || {};
@@ -389,7 +385,7 @@ var POLL       = null;
       initialisePoll();
     })
     .catch(function(err) {
-      showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
+      showError("Sorry, this poll is not working right now.");
       console.error("Poll load error:", err);
     });
 
@@ -415,16 +411,17 @@ var POLL       = null;
     checkVoteStatus();
 
     function checkVoteStatus() {
-      var jitter = Math.floor(Math.random() * 600);
+      // Stagger request across 29 simultaneous iframes (0–1200ms)
+      var jitter = Math.floor(Math.random() * 1200);
       setTimeout(function() {
         fetchWithTimeout(SCRIPT_URL, {
           method: "POST",
           body: JSON.stringify({ action: "load", intakeId: intakeId, pollId: pollId, uid: uid })
-        }, 9000)
+        }, 10000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           hide("loading-view");
-          if (!data.ok || !data.counts) {
+          if (!data.ok) {
             if (cachedAnswer) {
               renderResults({}, 0, false, cachedAnswer);
             } else {
@@ -437,10 +434,9 @@ var POLL       = null;
           if (data.voted) {
             var trueAnswer = data.answer;
             if (CACHE_KEY) localStorage.setItem(CACHE_KEY, trueAnswer);
-            renderResults(data.counts, data.total, false, trueAnswer);
-          } else if (cachedAnswer) {
-            renderResults(data.counts, data.total, false, cachedAnswer);
+            renderResults(data.counts || {}, data.total || 0, false, trueAnswer);
           } else {
+            // Server says user has NOT voted (clears stale local storage)
             if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
             hasVoted = false;
             hide("results-view");
@@ -482,11 +478,7 @@ var POLL       = null;
     }
 
     window.submitVote = function() {
-      if (selected === null) {
-        var firstBtn = document.querySelector(".option-btn");
-        if (firstBtn) firstBtn.focus();
-        return;
-      }
+      if (selected === null) return;
 
       var chosenOption = POLL.options[selected];
       hasVoted = true;
@@ -513,23 +505,21 @@ var POLL       = null;
             option:   chosenOption,
             uid:      uid
           })
-        }, 7000)
+        }, 8000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
           if (data.ok && data.counts && data.total > 0) {
             hide("loading-view");
             renderResults(data.counts, data.total, true, chosenOption);
           } else if (attempts < 3) {
-            var backoff = 300 + (attempts * 200);
-            setTimeout(executeVoteRequest, backoff);
+            setTimeout(executeVoteRequest, 400 * attempts);
           } else {
             fallbackLocalRender(chosenOption);
           }
         })
         .catch(function() {
           if (attempts < 3) {
-            var backoff = 300 + (attempts * 200);
-            setTimeout(executeVoteRequest, backoff);
+            setTimeout(executeVoteRequest, 400 * attempts);
           } else {
             fallbackLocalRender(chosenOption);
           }
