@@ -271,18 +271,21 @@ var POLL       = null;
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
 
-  <div id="loading-view">
+  <!-- View 1: Dynamic Loading View (Handles initial load & submission) -->
+  <div id="loading-view" style="display:flex;">
     <div class="loading-container">
       <div class="spinner"></div>
-      <div class="loading-text">Loading results...</div>
+      <div class="loading-text" id="loading-text-msg">Poll loading...</div>
     </div>
   </div>
 
+  <!-- View 2: Active Voting Form -->
   <div id="vote-view">
     <div class="options" id="options-list" role="group" aria-labelledby="poll-question"></div>
     <button class="submit-btn" id="submit-btn" onclick="submitVote()" disabled>Submit</button>
   </div>
 
+  <!-- View 3: Voted Results View -->
   <div id="results-view" aria-live="polite">
     <div class="results" id="results-list"></div>
     <div class="footer-text-line">
@@ -291,6 +294,7 @@ var POLL       = null;
     </div>
   </div>
 
+  <!-- View 4: Error View -->
   <div id="error-view" role="alert">
     <div class="error-banner" id="error-msg"></div>
   </div>
@@ -391,13 +395,15 @@ var POLL       = null;
 
     if (cachedAnswer) {
       hasVoted = true;
+      setLoadingMessage("Loading results...");
       show("loading-view");
       hide("vote-view");
       hide("results-view");
       revealPoll();
     } else {
-      show("vote-view");
-      hide("loading-view");
+      setLoadingMessage("Poll loading...");
+      show("loading-view");
+      hide("vote-view");
       hide("results-view");
       revealPoll();
     }
@@ -405,7 +411,6 @@ var POLL       = null;
     checkVoteStatus();
 
     function checkVoteStatus() {
-      // Jitter (0-2500ms) spreads traffic across the 29 simultaneous iframes
       var jitter = Math.floor(Math.random() * 2500);
       
       setTimeout(function() {
@@ -426,7 +431,6 @@ var POLL       = null;
             if (CACHE_KEY) localStorage.setItem(CACHE_KEY, trueAnswer);
             renderResults(data.counts || {}, data.total || 0, false, trueAnswer);
           } else {
-            // Server confirms user has NOT voted
             if (CACHE_KEY) localStorage.removeItem(CACHE_KEY);
             hasVoted = false;
             hide("results-view");
@@ -446,7 +450,8 @@ var POLL       = null;
       if (cachedAnswer) {
         show("results-view");
         document.getElementById("footer-text").textContent = "You’ve already voted.";
-        document.getElementById("total-note").textContent  = " (Results updating...)";
+        // Clean text notice without parentheses
+        document.getElementById("total-note").textContent  = " Results updating...";
         
         var box = document.getElementById("results-list");
         box.innerHTML = "";
@@ -467,7 +472,6 @@ var POLL       = null;
       }
       revealPoll();
       
-      // Retry in 3 seconds to auto-recover from server concurrency throttles
       setTimeout(checkVoteStatus, 3000);
     }
 
@@ -504,6 +508,7 @@ var POLL       = null;
       document.querySelectorAll(".option-btn").forEach(function(b) { b.disabled = true; });
 
       hide("vote-view");
+      setLoadingMessage("Loading results...");
       show("loading-view");
       if (window.__triggerFrameHeight) window.__triggerFrameHeight();
 
@@ -611,6 +616,11 @@ var POLL       = null;
         var count = safeTotal + " response" + (safeTotal !== 1 ? "s" : "") + " so far.";
         document.getElementById("total-note").textContent  = " There " + verb + " " + count;
       }
+    }
+
+    function setLoadingMessage(text) {
+      var msgEl = document.getElementById("loading-text-msg");
+      if (msgEl) msgEl.textContent = text;
     }
 
     function show(id) { document.getElementById(id).style.display = "flex"; }
