@@ -104,10 +104,11 @@
     gap: 12px;
   }
 
+  /* UPDATED: Flexible height button for 1-5 lines of text */
   .option-btn {
     display: flex;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     border: 1px solid #ddd;
     border-radius: var(--radius);
     background: var(--bg);
@@ -117,9 +118,12 @@
     width: 100%;
     transition: background 0.15s, border-color 0.15s;
     font-family: var(--font);
-    height: 60px;
+    min-height: 52px;
+    height: auto;
     text-align: left;
-    line-height: 1.35;
+    line-height: 1.4;
+    word-break: break-word;
+    white-space: normal;
   }
 
   .option-btn:hover { background: #f9f9f9; border-color: var(--brand); }
@@ -144,23 +148,24 @@
   .submit-btn:hover    { background: #1a2a6e; }
   .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* UPDATED: Dynamic row height for long text in results */
   .result-row {
     border: 1px solid #e0e0e0;
-    padding: 8px 14px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     border-radius: var(--radius);
-    min-height: 60px;
+    min-height: 56px;
     height: auto;
+    gap: 6px;
   }
 
   .result-label {
     font-size: 14px;
     font-weight: 500;
-    padding-bottom: 4px;
     color: var(--text);
-    line-height: 1.2;
+    line-height: 1.4;
     white-space: normal;
     overflow: visible;
     word-break: break-word;
@@ -257,7 +262,7 @@
   @media (max-width: 480px) {
     .poll { padding: 16px; }
     .poll-question { font-size: 16px; }
-    .option-btn { font-size: 14px; }
+    .option-btn { font-size: 14px; padding: 12px; }
   }
 </style>
 </head>
@@ -271,7 +276,7 @@ var POLL       = null;
 <main class="poll" role="region" aria-labelledby="poll-question">
   <h2 class="poll-question" id="poll-question"></h2>
 
-  <!-- View 1: Dynamic Loading View (Handles initial load & submission) -->
+  <!-- View 1: Dynamic Loading View -->
   <div id="loading-view" style="display:flex;">
     <div class="loading-container">
       <div class="spinner"></div>
@@ -450,7 +455,6 @@ var POLL       = null;
       if (cachedAnswer) {
         show("results-view");
         document.getElementById("footer-text").textContent = "You’ve already voted.";
-        // Clean text notice without parentheses
         document.getElementById("total-note").textContent  = " Results updating...";
         
         var box = document.getElementById("results-list");
