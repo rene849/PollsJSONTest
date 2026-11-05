@@ -41,7 +41,7 @@
     border: 1px solid #ddd;
     border-radius: 8px;
     background: var(--bg);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 8px 0 rgba(13, 13, 13, 0.15), 0 0 6px 0 rgba(13, 13, 13, 0.10); /* matches M1: brand Offset shadow (Small) + faint ambient layer */
     padding: 24px;
     display: flex;
     flex-direction: column;
@@ -323,7 +323,7 @@ var POLL       = null;
     : null;
 
   if (!intakeId || !courseId || !pollId) {
-    showError("Sorry, this poll is not working right now.");
+    showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
     return;
   }
 
@@ -389,7 +389,7 @@ var POLL       = null;
       initialisePoll();
     })
     .catch(function(err) {
-      showError("Sorry, this poll is not working right now.");
+      showError("Sorry, this poll is not working right now. Please use the chat icon to contact the student success team.");
     });
 
   function initialisePoll() {
